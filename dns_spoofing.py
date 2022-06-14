@@ -38,13 +38,13 @@ def dns_spoofing():
         if val[1] == iface:
             gateways.append(val)
 
-    spoof.printf("\nStarting poisoning...")
+    spoof.printf("Starting poisoning...", 4)
     # Start ARP poisoning
     my_addresses = sh.get_my_details(iface)
     for gw_ip, gw_iface in gateways:
         arp.one_way_arp_start(target["mac"], target["ip"], gw_ip, my_addresses['mac'], my_addresses['ip'], iface)
 
-    spoof.printf("Poisoning complete!")
+    spoof.printf("Poisoning initiated.")
 
     dns_spoof_and_repoison(my_addresses, gateways, target, server, iface)
 

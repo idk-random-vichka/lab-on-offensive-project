@@ -55,9 +55,9 @@ def choice(i=-1):
         else:
             printf("Invalid Input. Try again!", 2)
 
-def printf(str, i=-1, verbose=False):
+def printf(text, i=-1, verbose=False):
     if not verbose:
-        print(style_str(i) + str)
+        print(style_str(i) + str(text))
 
 def inputf(i=-1):
     return input(style_str(i))
