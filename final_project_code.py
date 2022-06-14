@@ -3,6 +3,7 @@ import netifaces as ni
 import arp_spoofing as arp
 import search_hosts as sh
 import spoofing_tool as spoof
+import sys
 
 default_iface = "lo"
 
@@ -20,7 +21,7 @@ def main():
     first_target = validate_ip(active_hosts, "")
     
     spoof.printf("")
-    spoof.printf("Input IP address of the second target out of the active hosts:", 1)
+    spoof.printf("Input IP address of the second target out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1)
     second_target = validate_ip(active_hosts, first_target["ip"])
 
     my_details = sh.get_my_details(iface)
@@ -55,7 +56,7 @@ def get_interface():
         user_input = spoof.inputf(7)
         if user_input.lower() not in ["default","d"]:
             if user_input.strip().isdigit():
-                iface = interfaces[int(user_input)-1]
+                iface = interfaces[int(user_input) - 1]
             elif user_input in interfaces:
                 iface = user_input
             else:
@@ -74,6 +75,12 @@ def validate_ip(active_hosts, other_ip):
     curr_ip = spoof.inputf(7)
     correct_tuple = {}
 
+    if curr_ip.strip().isdigit():
+        curr_ip = int(curr_ip)
+        if curr_ip > 0 and curr_ip < len(active_hosts) + 1:
+            curr_ip = active_hosts[int(curr_ip) - 1]["ip"]
+            spoof.printf("Chosen IP address: " + curr_ip)
+
     for host in active_hosts:
         if (str(host["ip"]) == curr_ip):
             correct_tuple = host
@@ -81,7 +88,7 @@ def validate_ip(active_hosts, other_ip):
             break
 
     if (curr_ip == other_ip):
-        spoof.printf("The second target cannot be the same as the first. Try again:", 2) # or 0?
+        spoof.printf("The second target cannot be the same as the first. Try again:", 2)
         return validate_ip(active_hosts, other_ip)
     elif (ip_is_valid == True):
         return correct_tuple

