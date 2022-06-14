@@ -2,6 +2,7 @@ from scapy.all import *
 import time
 
 # Hardcoded for now
+#
 
 # target one details
 g_macT1 = "08:00:27:b7:c4:af"
