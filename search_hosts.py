@@ -1,6 +1,6 @@
 import netifaces as ni
 from scapy.all import *
-import sys, os
+import spoofing_tool as spoof
 
 # main function
 def search_hosts(_iface):
@@ -35,11 +35,11 @@ def get_my_details(_iface):
 
 def print_active_hosts(active_hosts, num_scanned, net_addr): 
     num_active = len(active_hosts)
-    print("")
-    print("Found {} active hosts out of {} scanned (Network CIDR: {}).".format(num_active,num_scanned, net_addr))
+    spoof.printf("")
+    spoof.printf("Found {} active hosts out of {} scanned (Network CIDR: {}).".format(num_active,num_scanned, net_addr))
     for i in range(len(active_hosts)):
         host = active_hosts[i]
-        print("\t" + str(i+1) + ". " + "MAC: " + host["mac"] + "\tIP: " + host["ip"])
+        spoof.printf("\t" + str(i+1) + ". " + "MAC: " + host["mac"] + "\tIP: " + host["ip"])
 
 def ip2bin(ip):
     octets = map(int, ip.split('/')[0].split('.')) # '1.2.3.4'=>[1, 2, 3, 4]

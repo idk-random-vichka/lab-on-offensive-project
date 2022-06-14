@@ -1,38 +1,47 @@
 from scapy.all import *
-import netifaces as ni
-import arp_spoofing as arp
-import search_hosts as sh
+import netifaces as ni # pip install
 import sys, os
-from playsound import playsound
+from playsound import playsound # pip install
+
+import arp_spoofing as arp
+import dns_spoofing as dns
+import search_hosts as sh
 
 default_iface = "lo"
 
 def main():
     printf("Welcome to our tool for spoofing!")
-    playsound("resources/windows_xp_startup.mp3")
+    printf("")
+    playsoundf("resources/windows_xp_startup.mp3", True)
 
-    printf("Choose an attack: dns or arp", 1)
+    choose_atk_str = "Pick an attack: DNS(d) or ARP(a)"
+    printf(choose_atk_str, 1)
     while True:
-        _input = inp("Choose an attack: dns or arp", 1).lower()
+        _input = inp(choose_atk_str, 1, 7).lower()
         if _input in ["arp", "a"]:
+            printf("")
             printf("Chosen attack: ARP Poisoning.")
+            printf("-----------------------------")
             break
         elif _input in ["dns", "d"]:
+            printf("")
             printf("Chosen attack: DNS Spoofing.")
+            printf("----------------------------")
+            dns.dns_spoofing()
             break
         else:
             printf("Invalid Input. Try again!", 2)
         
 
-def inp(title = "", i=-1):
-    _input = inputf().lower()
+def inp(title = "", p=-1, i=-1):
+    _input = inputf(i).lower()
     if _input in ["q", "quit", "exit"]:
         printf("Are you sure you want to exit the application?", 0)
         if choice():
             sys.exit()
         else:
-            printf(title, i)
-            _input = inp(title).lower()
+            printf(title, p)
+            _input = inp(title, p=-1, i=-1).lower()
 
     return _input
 
@@ -52,31 +61,44 @@ def printf(str, i=-1, verbose=False):
 def inputf(i=-1):
     return input(style_str(i))
 
+def playsoundf(str, verbose=False):
+    if not verbose:
+        playsound(str)
+
 def style_str(i = -1):
     res = "|L&R| "
 
     if i == 0:
-        res += "[!]"
+        res += "[!]" # ~Warning
     elif i == 1:
-        res += "[?]"
+        res += "[?]" # Question
     elif i == 2:
-        res += "[I]"
+        res += "[x]" # Invalid input
     elif i == 3:
-        res += "[X]"
+        res += "[X]" # Closing application
+    elif i == 4:
+        res += "[.]" 
+    elif i == 5:
+        res += "[M]" 
+    elif i == 6:
+        res += "[=]" 
+    elif i == 7:
+        res += "[>]" # Input
     else:
         res += "[ ]"
 
     return res + " "
 
+def quit_sequence():
+        printf("Lovec & Ribar closed successfully.", 3)
+        playsoundf("resources/windows_xp_shutdown.mp3", True)
 
 # call main
 if __name__=="__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print(" KeyboardInterrupt")
-        printf("Lovec & Ribar closed successfully.", 3)
-        playsound("resources/windows_xp_shutdown.mp3")
+        print(" (KeyboardInterrupt)")
+        quit_sequence()
     except:
-        printf("Lovec & Ribar closed successfully.", 3)
-        playsound("resources/windows_xp_shutdown.mp3")
+        quit_sequence()

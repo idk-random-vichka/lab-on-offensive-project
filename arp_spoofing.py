@@ -3,6 +3,7 @@ import time
 
 # Hardcoded for now
 # https://prod.liveshare.vsengsaas.visualstudio.com/join?EE5AD55B6EBF068194A2BCB375C1A307EF78
+
 # target one details
 g_macT1 = "08:00:27:b7:c4:af"
 g_ipT1 = "192.168.56.101"

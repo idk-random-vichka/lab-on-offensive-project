@@ -2,6 +2,7 @@ from scapy.all import *
 import netifaces as ni
 import arp_spoofing as arp
 import search_hosts as sh
+import spoofing_tool as spoof
 
 default_iface = "lo"
 
@@ -10,13 +11,14 @@ def main():
 
     iface = get_interface()
 
-    print("Searching for active hosts in the subnet...")
+    spoof.printf("")
+    spoof.printf("Searching for active hosts in the subnet...", 4)
     active_hosts = sh.search_hosts(iface)
 
-    print("\nInput IP address of the first target out of the active hosts:")
+    spoof.printf("Input IP address of the first target out of the active hosts:")
     first_target = validate_ip(active_hosts, "")
     
-    print("\nInput IP address of the second target out of the active hosts:")
+    spoof.printf("Input IP address of the second target out of the active hosts:")
     second_target = validate_ip(active_hosts, first_target)
 
     my_details = sh.get_my_details(iface)
@@ -41,24 +43,31 @@ def get_interface():
 
     # choose interface
     try:
-        print("\nAvailable interfaces:")
+        spoof.printf("Available interfaces:")
         for i in range(len(interfaces)):
-            print("\t"+str(i+1) + ": " + interfaces[i])
-        print("\nChoose interface("+str(1)+"-"+str(len(interfaces))+") or default('d'):")
+            spoof.printf("\t"+str(i+1) + ": " + interfaces[i])
+        spoof.printf("")
 
-        user_input = input()
-        if user_input not in ["default","Default","d","D"]:
-            iface = interfaces[int(user_input)-1]
-        print("Chosen interface: " + iface + "\n")
+        spoof.printf("Choose interface("+str(1)+"-"+str(len(interfaces))+") or default(d):", 1)
+
+        user_input = spoof.inputf(7)
+        if user_input.lower() not in ["default","d"]:
+            if user_input.strip().isdigit():
+                iface = interfaces[int(user_input)-1]
+            elif user_input in interfaces:
+                iface = user_input
+            else:
+                raise # throw Exception
+        spoof.printf("Chosen interface: " + iface)
     except:
-        print("Invalid input. Choosing default interface ({}).".format(iface))
+        spoof.printf("Invalid input. Choosing default interface ({}).".format(iface), 0)
 
     return iface
     
 
 def validate_ip(active_hosts, other_ip):
     ip_is_valid = False
-    curr_ip = input()
+    curr_ip = spoof.inputf(7)
     correct_tuple = {}
 
     for host in active_hosts:
@@ -68,12 +77,12 @@ def validate_ip(active_hosts, other_ip):
             break
 
     if (curr_ip == other_ip):
-        print("The second target cannot be the same as the first. Try again:")
+        spoof.printf("The second target cannot be the same as the first. Try again:")
         return validate_ip(active_hosts, other_ip)
     elif (ip_is_valid == True):
         return correct_tuple
     else:
-        print("Invalid IP. Try again:")
+        spoof.printf("Invalid IP. Try again:")
         return validate_ip(active_hosts, other_ip)
 
 # call main
