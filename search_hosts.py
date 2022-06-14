@@ -35,8 +35,7 @@ def get_my_details(_iface):
 
 def print_active_hosts(active_hosts, num_scanned, net_addr): 
     num_active = len(active_hosts)
-    spoof.printf("")
-    spoof.printf("Found {} active hosts out of {} scanned (Network CIDR: {}).".format(num_active,num_scanned, net_addr))
+    spoof.printf("Found {} active hosts out of {} scanned (Network CIDR: {}):".format(num_active,num_scanned, net_addr))
     for i in range(len(active_hosts)):
         host = active_hosts[i]
         spoof.printf("\t" + str(i+1) + ". " + "MAC: " + host["mac"] + "\tIP: " + host["ip"])

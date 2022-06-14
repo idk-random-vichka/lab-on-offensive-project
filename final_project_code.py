@@ -15,11 +15,13 @@ def main():
     spoof.printf("Searching for active hosts in the subnet...", 4)
     active_hosts = sh.search_hosts(iface)
 
-    spoof.printf("Input IP address of the first target out of the active hosts:")
+    spoof.printf("")
+    spoof.printf("Input IP address of the first target out of the active hosts:", 1)
     first_target = validate_ip(active_hosts, "")
     
-    spoof.printf("Input IP address of the second target out of the active hosts:")
-    second_target = validate_ip(active_hosts, first_target)
+    spoof.printf("")
+    spoof.printf("Input IP address of the second target out of the active hosts:", 1)
+    second_target = validate_ip(active_hosts, first_target["ip"])
 
     my_details = sh.get_my_details(iface)
     arp.arp_spoofing(first_target["mac"], first_target["ip"], second_target["mac"], second_target["ip"], my_details["mac"], my_details["ip"], iface)
@@ -58,9 +60,11 @@ def get_interface():
                 iface = user_input
             else:
                 raise # throw Exception
+        spoof.printf("")
         spoof.printf("Chosen interface: " + iface)
+        spoof.printf("------------------" + "-" * len(iface))
     except:
-        spoof.printf("Invalid input. Choosing default interface ({}).".format(iface), 0)
+        spoof.printf("Invalid input. Choosing default interface ({}).".format(iface), 2)
 
     return iface
     
@@ -77,12 +81,12 @@ def validate_ip(active_hosts, other_ip):
             break
 
     if (curr_ip == other_ip):
-        spoof.printf("The second target cannot be the same as the first. Try again:")
+        spoof.printf("The second target cannot be the same as the first. Try again:", 2) # or 0?
         return validate_ip(active_hosts, other_ip)
     elif (ip_is_valid == True):
         return correct_tuple
     else:
-        spoof.printf("Invalid IP. Try again:")
+        spoof.printf("Invalid IP. Try again:", 2)
         return validate_ip(active_hosts, other_ip)
 
 # call main

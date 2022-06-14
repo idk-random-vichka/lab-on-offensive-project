@@ -36,23 +36,24 @@ def main():
 def inp(title = "", p=-1, i=-1):
     _input = inputf(i).lower()
     if _input in ["q", "quit", "exit"]:
-        printf("Are you sure you want to exit the application?", 0)
-        if choice():
+        printf("Are you sure you want to exit the application?", 2)
+        if choice(i):
             sys.exit()
         else:
             printf(title, p)
-            _input = inp(title, p=-1, i=-1).lower()
+            _input = inp(title, p, i).lower()
 
     return _input
 
-def choice():
+def choice(i=-1):
     while True:
-        _inp = inputf().lower()
+        _inp = inputf(i).lower()
         if _inp in ["y", "yes", "ye"]:
             return True
         elif _inp in ["n", "no"]:
             return False
-        else:            printf("Invalid Input. Try again!", 2)
+        else:
+            printf("Invalid Input. Try again!", 2)
 
 def printf(str, i=-1, verbose=False):
     if not verbose:
@@ -69,11 +70,11 @@ def style_str(i = -1):
     res = "|L&R| "
 
     if i == 0:
-        res += "[!]" # ~Warning
+        res += "[x]" # ~Warning
     elif i == 1:
         res += "[?]" # Question
     elif i == 2:
-        res += "[x]" # Invalid input
+        res += "[!]" # Invalid input / Warning
     elif i == 3:
         res += "[X]" # Closing application
     elif i == 4:
