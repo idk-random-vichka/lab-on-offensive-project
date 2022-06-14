@@ -69,3 +69,13 @@
 # inside dns repoison function
     #arp.one_way_arp(g_macT1, g_ipT1, dns_ip, my_addresses['mac'], my_addresses['ip'], iface, 2)
     #arp.one_way_arp(g_macT1, g_ipT1, dns_ip2, my_addresses['mac'], my_addresses['ip'], iface, 2)
+
+
+from django.core.validators import URLValidator
+from django.core.exceptions import ValidationError
+
+val = URLValidator(verify_exists=False)
+try:
+    val('http://www.google.com')
+except ValidationError, e:
+    print e

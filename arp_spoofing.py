@@ -36,7 +36,7 @@ def one_way_arp(macT1, ipT1, ipT2, macAtk, ipAtk, iface, pkt_type):
 def poison_m_times_every_n_secs(m, n, last_sent_time, should_poison, macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface, pkt_type):
     while m > 0:
         if time.time() - last_sent_time > n:
-            spoof.printf(m, 4)
+            #spoof.printf(m, 4)
             if should_poison:
                 arp_poison(macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface, pkt_type)
             else:

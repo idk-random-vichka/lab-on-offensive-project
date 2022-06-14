@@ -8,6 +8,8 @@ import arp_spoofing as arp
 import dns_spoofing as dns
 import search_hosts as sh
 
+INPUT_INDEX = 7
+PRINT_INDEX = -1
 default_iface = "lo"
 verbose = True # mute outputs
 
@@ -19,7 +21,7 @@ def main():
     choose_atk_str = "Pick an attack: DNS(d) or ARP(a)"
     printf(choose_atk_str, 1)
     while True:
-        _input = inp(choose_atk_str, 1, 7).lower()
+        _input = inp(choose_atk_str, 1).lower()
         if _input in ["arp", "a"]:
             printf("")
             printf("Chosen attack: ARP Poisoning.")
@@ -35,19 +37,20 @@ def main():
             printf("Invalid Input. Try again!", 2)
         
 
-def inp(title = "", p=-1, i=-1):
-    _input = inputf(i).lower()
+def inp(title="", p=PRINT_INDEX, i=INPUT_INDEX, eend=""):
+    _input = inputf(i, eend).lower()
     if _input in ["q", "quit", "exit"]:
         printf("Are you sure you want to exit the application?", 2)
         if choice(i):
             sys.exit()
         else:
-            printf(title, p)
-            _input = inp(title, p, i).lower()
+            if title != "":
+                printf(title, p)
+            _input = inp(title, p, i, eend).lower()
 
     return _input
 
-def choice(i=-1):
+def choice(i=INPUT_INDEX):
     while True:
         _inp = inputf(i).lower()
         if _inp in ["y", "yes", "ye"]:
@@ -57,18 +60,18 @@ def choice(i=-1):
         else:
             printf("Invalid Input. Try again!", 2)
 
-def printf(text, i=-1, verbose=False):
+def printf(text, i=PRINT_INDEX, verbose=False):
     if not verbose:
         print(style_str(i) + str(text))
 
-def inputf(i=-1):
-    return input(style_str(i))
+def inputf(i=INPUT_INDEX, eend=""):
+    return input(style_str(i) + eend)
 
 def playsoundf(str, verbose=False):
     if not verbose:
         playsound(str)
 
-def style_str(i = -1):
+def style_str(i=PRINT_INDEX):
     res = "|L&R| "
 
     if i == -1:

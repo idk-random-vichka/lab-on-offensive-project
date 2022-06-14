@@ -53,7 +53,7 @@ def get_interface():
 
         spoof.printf("Choose interface("+str(1)+"-"+str(len(interfaces))+") or default(d):", 1)
 
-        user_input = spoof.inputf(7)
+        user_input = spoof.inputf()
         if user_input.lower() not in ["default","d"]:
             if user_input.strip().isdigit():
                 iface = interfaces[int(user_input) - 1]
@@ -72,7 +72,7 @@ def get_interface():
 
 def validate_ip(active_hosts, other_ip):
     ip_is_valid = False
-    curr_ip = spoof.inputf(7)
+    curr_ip = spoof.inputf()
     correct_tuple = {}
 
     if curr_ip.strip().isdigit():
