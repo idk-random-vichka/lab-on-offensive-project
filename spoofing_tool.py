@@ -43,8 +43,7 @@ def choice():
             return True
         elif _inp in ["n", "no"]:
             return False
-        else:
-            printf("Invalid Input. Try again!", 2)
+        else:            printf("Invalid Input. Try again!", 2)
 
 def printf(str, i=-1, verbose=False):
     if not verbose:
