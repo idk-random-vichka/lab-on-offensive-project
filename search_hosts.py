@@ -67,7 +67,3 @@ def network(ip,mask):
     network += str( int( iOctets[3] ) & int(mOctets[3] ) )
 
     return network
-
-# call main
-if __name__=="__main__":
-    search_hosts("")

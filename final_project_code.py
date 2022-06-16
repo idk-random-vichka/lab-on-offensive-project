@@ -5,27 +5,44 @@ import search_hosts as sh
 import spoofing_tool as spoof
 import sys
 
-default_iface = "lo"
+DEFAULT_IFACE = "lo"
 
-def main():
-    conf.verb = 0
+def arp(gratuitious, verbose):
+    if verbose:
+        conf.verb = 0
 
-    iface = get_interface()
+    spoof.clear()
+
+    previous_tuples = []
+    previous_tuples.append(["Chosen attack: ARP Poisoning.", 0])
+    previous_tuples.append(["-----------------------------"])
+
+    iface, previous_tuples = get_interface(previous_tuples)
+
+    previous_tuples.append(["Searching for active hosts in the subnet..."])
+    previous_tuples.append([""])
+
+    spoof.print_previous(previous_tuples, True)
+
+    active_hosts, previous_tuples = sh.search_hosts(iface, [])
 
     spoof.printf("")
-    spoof.printf("Searching for active hosts in the subnet...", 4)
-    active_hosts = sh.search_hosts(iface)
-
-    spoof.printf("")
+    previous_tuples.append([""])
     spoof.printf("Input IP address of the first target out of the active hosts:", 1)
-    first_target = validate_ip(active_hosts, "")
+    previous_tuples.append(["Input IP address of the first target out of the active hosts:", 1])
+    
+    first_target = validate_ip(active_hosts, "", previous_tuples)
+    previous_tuples.append([first_target["ip"], 7])
     
     spoof.printf("")
+    previous_tuples.append([""])
     spoof.printf("Input IP address of the second target out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1)
-    second_target = validate_ip(active_hosts, first_target["ip"])
+    previous_tuples.append(["Input IP address of the second target out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1])
+    
+    second_target = validate_ip(active_hosts, first_target["ip"], previous_tuples)
 
     my_details = sh.get_my_details(iface)
-    arp.arp_spoofing(first_target["mac"], first_target["ip"], second_target["mac"], second_target["ip"], my_details["mac"], my_details["ip"], iface)
+    arp.arp_spoofing(first_target["mac"], first_target["ip"], second_target["mac"], second_target["ip"], my_details["mac"], my_details["ip"], iface, gratuitious)
     
 
 def get_interface(previous_tuples=[]):
@@ -42,7 +59,7 @@ def get_interface(previous_tuples=[]):
     try: 
         iface = ni.gateways()["default"][2][1]
     except:
-        iface = default_iface
+        iface = DEFAULT_IFACE
 
     # choose interface
     try:
@@ -94,12 +111,7 @@ def validate_ip(active_hosts, other_ip, previous_tuples=[]):
         spoof.printf("The second target cannot be the same as the first. Try again:", 2)
         return validate_ip(active_hosts, other_ip, previous_tuples)
     elif (ip_is_valid == True):
-        #spoof.print_previous(previous_tuples)
         return correct_tuple
     else:
         spoof.printf("Invalid IP. Try again:", 2)
         return validate_ip(active_hosts, other_ip, previous_tuples)
-
-# call main
-if __name__=="__main__":
-    main()
