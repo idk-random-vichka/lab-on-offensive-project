@@ -21,8 +21,8 @@ REPOISON_TIME = int(10)
 #     b"belot.bg.": "10.0.2.6",
 # }
 
-# target_ip = "10.0.2.4"
-# ip_to_spoof = "10.0.2.6"
+# target_ip = "10.0.2.4" M1
+# ip_to_spoof = "10.0.2.6" M2k
 
 def dns_spoofing():
     conf.verb = 0 # make scapy verbose (no output)
@@ -37,18 +37,28 @@ def dns_spoofing():
     spoof.printf("Input the IP address of the target out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1)
     target = fpc.validate_ip(active_hosts, "")
 
-    #spoof.printf("")
-    #spoof.printf("Input the IP address of the server out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1)
-    #server = fpc.validate_ip(active_hosts, target["ip"])
-
     # Get the IP addresses of the default gateways of the selected interface
     gateways = []
     for key, val in ni.gateways()["default"].items():
         if val[1] == iface:
             gateways.append(val)
 
-    dns_hosts = choose_websites(active_hosts)
+
+    previous_tuples = []
+    to_print = "Chosen target IP address: " + target["ip"]
+    previous_tuples.append([to_print, 0])
+    previous_tuples.append(["-" * len(to_print), -1])
+
+    dns_hosts = choose_websites(active_hosts, previous_tuples).copy()
     
+    spoof.clear()
+    spoof.printf("Chosen websites and targets:", 0)
+
+    i = 1
+    for url, ip in dns_hosts.items():
+        spoof.printf("\t"+ str(i) + ". URL: " + url[:-1] + " \tIP: " + ip)
+        i+=1
+
     spoof.printf("")
     spoof.printf("Starting poisoning...", 4)
     # Start ARP poisoning
@@ -62,10 +72,8 @@ def dns_spoofing():
 
     # TODO stop arp poisoning
 
-def choose_websites(active_hosts):
-    #spoof.clear()
-    spoof.printf("Now you can choose which websites to spoof and with what IP where the IP is out of the active hosts("+str(1)+"-"+str(len(active_hosts))+").")
-    spoof.printf("You can pick multiple times and stop choosing by pressing 's'.")
+
+def choose_websites(active_hosts, previous_tuples):
     
     dns_hosts = {}
     _iter = 0
@@ -73,6 +81,10 @@ def choose_websites(active_hosts):
     continue2 = True
 
     while continue1 and continue2:
+        spoof.print_previous(previous_tuples, True)
+        spoof.printf("Now you can choose which websites to spoof and with what IP out of the active hosts("+str(1)+"-"+str(len(active_hosts))+").")
+        spoof.printf("You can pick multiple times. To stop choosing type done(d).")
+        spoof.printf("")
         spoof.printf("Choose website to spoof and its corresponding IP out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1)
         url, continue1 = input_web(7, "URL: ", _iter, True, active_hosts)
         if continue1:
@@ -80,19 +92,19 @@ def choose_websites(active_hosts):
         _iter += 1
         if continue1 and continue2:
             dns_hosts[url+"."] = ip
-            spoof.printf("Added tuple: (" + url + ", " + ip + ")")
+            spoof.printf("Added tuple (" + url + ", " + ip + ")", 0)
+            time.sleep(0.5)
 
     return dns_hosts
 
 
 def input_web(i, eend, _iter, isURL, active_hosts):
     res = spoof.inputf(i, eend)
-    if res in ["s", "stop"]:
+    if res in ["d", "done"]:
         if _iter < 1:
             spoof.printf("You chould choose at least one (URL, IP) pair!", 2)
             return input_web(i, eend, _iter, isURL, active_hosts)
         else:
-            spoof.printf("Websites to spoof chosen.")
             return res, False
 
     if isURL:

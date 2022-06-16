@@ -16,11 +16,13 @@ def search_hosts(_iface):
 
     i = 0
     active_hosts = []
+    my_addresses = get_my_details(_iface)
+    active_hosts.append({"ip": my_addresses["ip"], "mac": my_addresses["mac"], "cmmnt": " (this device)"})
     for host in ans:
         ip_address = host[1][ARP].psrc
         mac_address = str(host[1][ARP].hwsrc).lower()
 
-        current_tuple= {"ip": ip_address, "mac": mac_address}
+        current_tuple= {"ip": ip_address, "mac": mac_address, "cmmnt": ""}
         active_hosts.append(current_tuple)
         i+=1
 
@@ -38,7 +40,7 @@ def print_active_hosts(active_hosts, num_scanned, net_addr):
     spoof.printf("Found {} active hosts out of {} scanned (Network CIDR: {}):".format(num_active,num_scanned, net_addr))
     for i in range(len(active_hosts)):
         host = active_hosts[i]
-        spoof.printf("\t" + str(i+1) + ". " + "MAC: " + host["mac"] + "\tIP: " + host["ip"])
+        spoof.printf("\t" + str(i+1) + ". " + "MAC: " + host["mac"] + "\tIP: " + host["ip"] + host["cmmnt"])
 
 def ip2bin(ip):
     octets = map(int, ip.split('/')[0].split('.')) # '1.2.3.4'=>[1, 2, 3, 4]

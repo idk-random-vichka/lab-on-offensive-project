@@ -13,23 +13,27 @@ PRINT_INDEX = -1
 default_iface = "lo"
 verbose = True # mute outputs
 
+# make 'q' work everywhere
+
 def main():
-    printf("Welcome to our tool for spoofing!")
+    clear()
+    printf("Welcome to our tool for spoofing!", 0)
     printf("")
     playsoundf("resources/windows_xp_startup.mp3", verbose)
 
-    choose_atk_str = "Pick an attack: DNS(d) or ARP(a)"
-    printf(choose_atk_str, 1)
+    previous_tuples = [["Pick an attack: DNS(d) or ARP(a)", 1]]
+    print_previous(previous_tuples)
+
     while True:
-        _input = inp(choose_atk_str, 1).lower()
+        _input = inpf(previous_tuples).lower()
         if _input in ["arp", "a"]:
-            printf("")
-            printf("Chosen attack: ARP Poisoning.")
+            clear()
+            printf("Chosen attack: ARP Poisoning.", 0)
             printf("-----------------------------")
             break
         elif _input in ["dns", "d"]:
-            printf("")
-            printf("Chosen attack: DNS Spoofing.")
+            clear()
+            printf("Chosen attack: DNS Spoofing.", 0)
             printf("----------------------------")
             dns.dns_spoofing()
             break
@@ -37,22 +41,22 @@ def main():
             printf("Invalid Input. Try again!", 2)
         
 
-def inp(title="", p=PRINT_INDEX, i=INPUT_INDEX, eend=""):
+def inpf(i=INPUT_INDEX, eend="", previous_tuples=[]):
     _input = inputf(i, eend).lower()
     if _input in ["q", "quit", "exit"]:
-        printf("Are you sure you want to exit the application?", 2)
-        if choice(i):
+        clear()
+        printf("Are you sure you want to exit the application?", 1)
+        if choice():
             sys.exit()
         else:
-            if title != "":
-                printf(title, p)
-            _input = inp(title, p, i, eend).lower()
+            print_previous(previous_tuples, True)
+            _input = inpf(previous_tuples, i, eend).lower()
 
     return _input
 
-def choice(i=INPUT_INDEX):
+def choice():
     while True:
-        _inp = inputf(i).lower()
+        _inp = inputf().lower()
         if _inp in ["y", "yes", "ye"]:
             return True
         elif _inp in ["n", "no"]:
@@ -75,7 +79,9 @@ def style_str(i=PRINT_INDEX):
     res = "|L&R| "
 
     if i == -1:
-        res += "[ ]"   
+        res += "[ ]" 
+    elif i == 0:
+        res += "[+]" # Beginning of section  
     elif i == 1:
         res += "[?]" # Question
     elif i == 2:
@@ -94,6 +100,16 @@ def style_str(i=PRINT_INDEX):
         res += "[ ]"
 
     return res + " "
+
+def print_previous(previous_tuples, clear_screen=False):
+    if clear_screen:
+        clear()
+
+    for _tuple in previous_tuples:
+        try:
+            printf(_tuple[0], _tuple[1])
+        except:
+            printf(_tuple[0])
 
 def clear():
     # for windows
@@ -116,3 +132,4 @@ if __name__=="__main__":
         quit_sequence()
     except:
         quit_sequence()
+    # main()

@@ -61,8 +61,8 @@ def get_interface():
                 iface = user_input
             else:
                 raise # throw Exception
-        spoof.printf("")
-        spoof.printf("Chosen interface: " + iface)
+        spoof.clear()
+        spoof.printf("Chosen interface: " + iface, 0)
         spoof.printf("------------------" + "-" * len(iface))
     except:
         spoof.printf("Invalid input. Choosing default interface ({}).".format(iface), 2)
@@ -79,7 +79,6 @@ def validate_ip(active_hosts, other_ip):
         curr_ip = int(curr_ip)
         if curr_ip > 0 and curr_ip < len(active_hosts) + 1:
             curr_ip = active_hosts[int(curr_ip) - 1]["ip"]
-            spoof.printf("Chosen IP address: " + curr_ip)
 
     for host in active_hosts:
         if (str(host["ip"]) == curr_ip):

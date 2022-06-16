@@ -79,3 +79,8 @@ try:
     val('http://www.google.com')
 except ValidationError, e:
     print e
+
+
+    # spoof.printf("")
+    # spoof.printf("Input the IP address of the server out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1)
+    # server = fpc.validate_ip(active_hosts, target["ip"])
