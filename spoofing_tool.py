@@ -25,32 +25,32 @@ def main():
     print_previous(previous_tuples)
 
     while True:
-        _input = inpf(previous_tuples).lower()
+        _input = inputf(INPUT_INDEX, "", previous_tuples).lower()
         if _input in ["arp", "a"]:
             clear()
             printf("Chosen attack: ARP Poisoning.", 0)
             printf("-----------------------------")
             break
         elif _input in ["dns", "d"]:
-            clear()
-            printf("Chosen attack: DNS Spoofing.", 0)
-            printf("----------------------------")
             dns.dns_spoofing()
             break
         else:
             printf("Invalid Input. Try again!", 2)
-        
 
-def inpf(i=INPUT_INDEX, eend="", previous_tuples=[]):
-    _input = inputf(i, eend).lower()
-    if _input in ["q", "quit", "exit"]:
+def printf(text, i=PRINT_INDEX, verbose=False):
+    if not verbose:
+        print(style_str(i) + str(text))
+
+def inputf(i=INPUT_INDEX, eend="", previous_tuples=[]):
+    _input = input(style_str(i) + eend)
+    if _input.lower() in ["q", "quit", "exit"]:
         clear()
         printf("Are you sure you want to exit the application?", 1)
         if choice():
             sys.exit()
         else:
             print_previous(previous_tuples, True)
-            _input = inpf(previous_tuples, i, eend).lower()
+            _input = inputf(i, eend, previous_tuples)
 
     return _input
 
@@ -63,13 +63,6 @@ def choice():
             return False
         else:
             printf("Invalid Input. Try again!", 2)
-
-def printf(text, i=PRINT_INDEX, verbose=False):
-    if not verbose:
-        print(style_str(i) + str(text))
-
-def inputf(i=INPUT_INDEX, eend=""):
-    return input(style_str(i) + eend)
 
 def playsoundf(str, verbose=False):
     if not verbose:
@@ -123,13 +116,14 @@ def clear():
 def quit_sequence():
         printf("Lovec & Ribar closed successfully.", 3)
         playsoundf("resources/windows_xp_shutdown.mp3", verbose)
+
 # call main
 if __name__=="__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print(" (KeyboardInterrupt)")
-        quit_sequence()
-    except:
-        quit_sequence()
-    # main()
+    # try:
+    #     main()
+    # except KeyboardInterrupt:
+    #     print(" (KeyboardInterrupt)")
+    #     quit_sequence()
+    # except:
+    #     quit_sequence()
+    main()

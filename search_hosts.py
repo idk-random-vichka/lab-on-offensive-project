@@ -3,7 +3,7 @@ from scapy.all import *
 import spoofing_tool as spoof
 
 # main function
-def search_hosts(_iface):
+def search_hosts(_iface, previous_tuples=[]):
     ip = ni.ifaddresses(_iface)[ni.AF_INET][0]['addr']
     network_mask = ni.ifaddresses(_iface)[ni.AF_INET][0]['netmask']
 
@@ -26,21 +26,28 @@ def search_hosts(_iface):
         active_hosts.append(current_tuple)
         i+=1
 
-    print_active_hosts(active_hosts, len(ans)+len(un_ans), network_addr)
+    _previous_tuples = print_active_hosts(active_hosts, len(ans)+len(un_ans), network_addr, previous_tuples)
 
-    return active_hosts
+    return active_hosts, _previous_tuples
 
 def get_my_details(_iface): 
     ip_address = ni.ifaddresses(_iface)[ni.AF_INET][0]['addr']
     mac_address = ni.ifaddresses(_iface)[ni.AF_LINK][0]['addr']
     return {"ip": ip_address, "mac": mac_address}
 
-def print_active_hosts(active_hosts, num_scanned, net_addr): 
+def print_active_hosts(active_hosts, num_scanned, net_addr, previous_tuples=[], _pr=True): 
     num_active = len(active_hosts)
-    spoof.printf("Found {} active hosts out of {} scanned (Network CIDR: {}):".format(num_active,num_scanned, net_addr))
+    if _pr:
+        previous_tuples.append(["Found {} active hosts out of {} scanned (Network CIDR: {}):".format(num_active,num_scanned, net_addr)])
+
     for i in range(len(active_hosts)):
         host = active_hosts[i]
-        spoof.printf("\t" + str(i+1) + ". " + "MAC: " + host["mac"] + "\tIP: " + host["ip"] + host["cmmnt"])
+        previous_tuples.append(["\t" + str(i+1) + ". " + "MAC: " + host["mac"] + "\tIP: " + host["ip"] + host["cmmnt"]])
+
+    if _pr:
+        spoof.print_previous(previous_tuples)
+
+    return previous_tuples
 
 def ip2bin(ip):
     octets = map(int, ip.split('/')[0].split('.')) # '1.2.3.4'=>[1, 2, 3, 4]

@@ -28,7 +28,7 @@ def main():
     arp.arp_spoofing(first_target["mac"], first_target["ip"], second_target["mac"], second_target["ip"], my_details["mac"], my_details["ip"], iface)
     
 
-def get_interface():
+def get_interface(previous_tuples=[]):
     # get available interfaces
     interfaces = get_if_list()
 
@@ -46,14 +46,16 @@ def get_interface():
 
     # choose interface
     try:
-        spoof.printf("Available interfaces:")
+        previous_tuples.append(["Available interfaces:"])
+
         for i in range(len(interfaces)):
-            spoof.printf("\t"+str(i+1) + ": " + interfaces[i])
-        spoof.printf("")
+            previous_tuples.append(["\t"+str(i+1) + ": " + interfaces[i]])
 
-        spoof.printf("Choose interface("+str(1)+"-"+str(len(interfaces))+") or default(d):", 1)
+        previous_tuples.append([""])
+        previous_tuples.append(["Choose interface("+str(1)+"-"+str(len(interfaces))+") or default(d):", 1])
+        spoof.print_previous(previous_tuples)
 
-        user_input = spoof.inputf()
+        user_input = spoof.inputf(7, "", previous_tuples)
         if user_input.lower() not in ["default","d"]:
             if user_input.strip().isdigit():
                 iface = interfaces[int(user_input) - 1]
@@ -61,18 +63,20 @@ def get_interface():
                 iface = user_input
             else:
                 raise # throw Exception
-        spoof.clear()
-        spoof.printf("Chosen interface: " + iface, 0)
-        spoof.printf("------------------" + "-" * len(iface))
+        previous_tuples = []
+        previous_tuples.append(["Chosen interface: " + iface, 0])
+        previous_tuples.append(["------------------" + "-" * len(iface)])
     except:
-        spoof.printf("Invalid input. Choosing default interface ({}).".format(iface), 2)
+        previous_tuples = []
+        previous_tuples.append(["Invalid input. Choosing default interface ({}).".format(iface), 2])
+        previous_tuples.append(["---------------------------------------------" + "-" * len(iface)])
 
-    return iface
+    return iface, previous_tuples
     
 
-def validate_ip(active_hosts, other_ip):
+def validate_ip(active_hosts, other_ip, previous_tuples=[]):
     ip_is_valid = False
-    curr_ip = spoof.inputf()
+    curr_ip = spoof.inputf(7, "", previous_tuples)
     correct_tuple = {}
 
     if curr_ip.strip().isdigit():
@@ -88,12 +92,13 @@ def validate_ip(active_hosts, other_ip):
 
     if (curr_ip == other_ip):
         spoof.printf("The second target cannot be the same as the first. Try again:", 2)
-        return validate_ip(active_hosts, other_ip)
+        return validate_ip(active_hosts, other_ip, previous_tuples)
     elif (ip_is_valid == True):
+        #spoof.print_previous(previous_tuples)
         return correct_tuple
     else:
         spoof.printf("Invalid IP. Try again:", 2)
-        return validate_ip(active_hosts, other_ip)
+        return validate_ip(active_hosts, other_ip, previous_tuples)
 
 # call main
 if __name__=="__main__":
