@@ -1,0 +1,11 @@
+SSL stripping
+multi-target ARP
+documentation
+report
+
+ask lecturer:
+    silent vs. all-out (is our approach for gratuitoious fine)
+    should we even do multi-target ARP
+    maybe show our progress so far
+    give concerns about SSL stripping
+    ask what we should about report
