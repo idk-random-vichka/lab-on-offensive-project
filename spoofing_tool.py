@@ -4,7 +4,7 @@ import netifaces as ni # pip install
 
 from os import system, name
 import signal
-import sys
+import sys, os
 
 import arp_spoofing as arp
 import dns_spoofing as dns
@@ -15,11 +15,12 @@ PRINT_INDEX = -1
 DEFAULT_IFACE = "lo"
 
 ## VARIABLES ##
-verbose = False # mute outputs
+verbose = True # mute outputs
 gratuitious = False # arp setting
 
 def main():
     clear()
+    enable_ip_forward()
     printf("Welcome to our tool for spoofing!", 0)
     printf("")
     playsoundf("resources/windows_xp_startup.mp3", verbose)
@@ -183,7 +184,19 @@ def clear():
     # for mac and linux
     else:
         _ = system('clear')
-   
+
+def enable_ip_forward():
+    # for windows
+    if name == 'nt':
+        from services import WService
+        serv = WService("RemoteAccess")
+        serv.start()
+
+    # for linux
+    else:
+        import subprocess
+        subprocess.call(["sysctl", "-w", "net.ipv4.ip_forward=1"], stdout=open(os.devnull, "wb"))
+
 def handler(signum, frame):
     print(" (Current proccess killed)")
     sys.exit()

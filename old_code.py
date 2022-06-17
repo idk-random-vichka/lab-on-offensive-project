@@ -1,3 +1,7 @@
+    # import subprocess
+    # subprocess.call(["sysctl", "-w", "net.ipv4.ip_forward=1"])
+    
+    
     #network_ips = list(network_addr.hosts()) # list of the usable hosts in the network (excluding the network address & broadcast address)
 
     #arp.one_way_arp(g_macT1, g_ipT1, dns_ip, g_macAtk, g_ipAtk, iface) 

