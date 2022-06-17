@@ -85,3 +85,41 @@
 
 # target_ip = "10.0.2.4" M1
 # ip_to_spoof = "10.0.2.6" M2k
+
+
+        # else:
+        #     # spoof.should_ip_forward(True)
+        #     if pkt[IP].dst == "131.155.2.3":
+        #         print("miilk")
+        #         pkt[Ether].dst = "ff:ff:ff:ff:ff:ff"
+        #         try:
+        #             del pkt[IP].len
+        #             del pkt[IP].chksum
+        #         except:
+        #             pass
+
+        #         try:
+        #             del pkt[UDP].len
+        #             del pkt[UDP].chksum
+        #         except:
+        #             pass
+
+        #         new_pkt = send(pkt, iface=iface)
+            # time.sleep(0.1)
+            # spoof.should_ip_forward(False)
+
+        # elif pkt.haslayer(DNS) and pkt[IP].src == target['ip']:
+
+        #     pkt[Ether].dst = "ff:ff:ff:ff:ff:ff"
+        #     pkt[Ether].src = my_addresses['mac']
+
+        #     pkt[IP].src = my_addresses['ip']
+
+        #     del pkt[IP].len
+        #     del pkt[IP].chksum
+
+        #     del pkt[UDP].len
+        #     del pkt[UDP].chksum
+
+        #     new_pkt = sr1(pkt, iface=iface)
+        #     print(new_pkt.show())

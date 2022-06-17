@@ -19,8 +19,8 @@ verbose = True # mute outputs
 gratuitious = False # arp setting
 
 def main():
+    # should_ip_forward(True)
     clear()
-    enable_ip_forward()
     printf("Welcome to our tool for spoofing!", 0)
     printf("")
     playsoundf("resources/windows_xp_startup.mp3", verbose)
@@ -188,17 +188,24 @@ def clear():
     else:
         _ = system('clear')
 
-def enable_ip_forward():
+def should_ip_forward(should_forward):
     # for windows
     if name == 'nt':
         from services import WService
         serv = WService("RemoteAccess")
-        serv.start()
+        if should_forward:
+            serv.start()
+        else:
+            serv.stop()
 
     # for linux
     else:
         import subprocess
-        subprocess.call(["sysctl", "-w", "net.ipv4.ip_forward=1"], stdout=open(os.devnull, "wb"))
+        if should_forward:
+            forw = "1"
+        else:
+            forw = "0"
+        subprocess.call(["sysctl", "-w", "net.ipv4.ip_forward="+forw])#, stdout=open(os.devnull, "wb"))
 
 def handler(signum, frame):
     sys.exit()

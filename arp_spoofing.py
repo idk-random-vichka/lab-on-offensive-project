@@ -20,8 +20,13 @@ def arp_spoofing(gratuitious, verbose):
         conf.verb = 0
 
     spoof.clear()
-
     previous_tuples = []
+
+    # enable ip forwarding
+    spoof.should_ip_forward(True)
+    previous_tuples.append(["IP forwarding enabled!"])
+    previous_tuples.append([""])
+
     previous_tuples.append(["Chosen attack: ARP Poisoning.", 0])
     previous_tuples.append(["-----------------------------"])
 
