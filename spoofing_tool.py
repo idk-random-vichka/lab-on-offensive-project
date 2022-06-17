@@ -31,7 +31,7 @@ def main():
     while True:
         _input = inputf(previous_tuples).lower()
         if _input in ["arp", "a"]:
-            arp.arp(gratuitious, verbose)
+            arp.arp_spoofing(gratuitious, verbose)
             break
         elif _input in ["dns", "d"]:
             dns.dns_spoofing(gratuitious, verbose)
@@ -82,9 +82,12 @@ def get_interface(previous_tuples=[]):
         previous_tuples.append(["Invalid input. Choosing default interface ({}).".format(iface), 2])
         previous_tuples.append(["---------------------------------------------" + "-" * len(iface)])
 
+    previous_tuples.append(["Searching for active hosts in the subnet..."])
+    previous_tuples.append([""])
+
     return iface, previous_tuples
 
-def validate_ip(active_hosts, other_ip, previous_tuples=[]):
+def validate_ip(active_hosts, other_ips, previous_tuples=[]):
     ip_is_valid = False
     curr_ip = inputf(previous_tuples)
     correct_tuple = {}
@@ -100,14 +103,14 @@ def validate_ip(active_hosts, other_ip, previous_tuples=[]):
             ip_is_valid = True
             break
 
-    if (curr_ip == other_ip):
-        printf("The second target cannot be the same as the first. Try again:", 2)
-        return validate_ip(active_hosts, other_ip, previous_tuples)
+    if (curr_ip in other_ips):
+        printf("Target repeated! Try again:", 2)
+        return validate_ip(active_hosts, other_ips, previous_tuples)
     elif (ip_is_valid == True):
         return correct_tuple
     else:
         printf("Invalid IP. Try again:", 2)
-        return validate_ip(active_hosts, other_ip, previous_tuples)
+        return validate_ip(active_hosts, other_ips, previous_tuples)
 
 def printf(text, i=PRINT_INDEX, verbose=False):
     if not verbose:
@@ -198,11 +201,10 @@ def enable_ip_forward():
         subprocess.call(["sysctl", "-w", "net.ipv4.ip_forward=1"], stdout=open(os.devnull, "wb"))
 
 def handler(signum, frame):
-    print(" (Current proccess killed)")
     sys.exit()
 
 def quit_sequence():
-        printf("Lovec & Ribar closed successfully.", 3)
+        printf("Closed: Lovec & Ribar.", 3)
         playsoundf("resources/windows_xp_shutdown.mp3", verbose)
 
 # call main
@@ -212,7 +214,13 @@ if __name__=="__main__":
         main()
     except KeyboardInterrupt:
         print(" (KeyboardInterrupt)")
+        quit_sequence()    
+    except SystemExit:
+        print(" (SystemExit)")
         quit_sequence()
     except:
+        printf("Unexpected error!", 2)
+        printf(sys.exc_info()[1], 2)
+        printf("")
         quit_sequence()
     # main()

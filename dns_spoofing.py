@@ -32,9 +32,6 @@ def dns_spoofing(gratuitious, verbose):
 
     iface, previous_tuples = spoof.get_interface(previous_tuples)
 
-    previous_tuples.append(["Searching for active hosts in the subnet..."])
-    previous_tuples.append([""])
-
     spoof.print_previous(previous_tuples, True)
 
     active_hosts, previous_tuples = sh.search_hosts(iface, [])
@@ -44,7 +41,7 @@ def dns_spoofing(gratuitious, verbose):
     spoof.printf("Input the IP address of the target out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1)
     previous_tuples.append(["Input the IP address of the target out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1])
 
-    target = spoof.validate_ip(active_hosts, "", previous_tuples)
+    target = spoof.validate_ip(active_hosts, [], previous_tuples)
 
     # Get the IP addresses of the default gateways of the selected interface
     gateways = []
