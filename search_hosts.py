@@ -1,5 +1,6 @@
 import netifaces as ni
 from scapy.all import *
+
 import spoofing_tool as spoof
 
 # main function

@@ -1,14 +1,3 @@
-    ip_mask = ""
-    for i in range(len(bin_ip)):
-        # use the bits from the ip until the mask has 1's
-        if bin_netmask[i] == "1":
-            ip_mask += bin_ip[i]
-        else:
-            break
-
-    ip_mask += "_"+"0" * (len(bin_ip) - len(ip_mask))
-
-
     #network_ips = list(network_addr.hosts()) # list of the usable hosts in the network (excluding the network address & broadcast address)
 
     #arp.one_way_arp(g_macT1, g_ipT1, dns_ip, g_macAtk, g_ipAtk, iface) 
@@ -71,16 +60,24 @@
     #arp.one_way_arp(g_macT1, g_ipT1, dns_ip2, my_addresses['mac'], my_addresses['ip'], iface, 2)
 
 
-from django.core.validators import URLValidator
-from django.core.exceptions import ValidationError
+# from django.core.validators import URLValidator
+# from django.core.exceptions import ValidationError
 
-val = URLValidator(verify_exists=False)
-try:
-    val('http://www.google.com')
-except ValidationError, e:
-    print e
+# val = URLValidator(verify_exists=False)
+# try:
+#     val('http://www.google.com')
+# except ValidationError, e:
+#     print e
 
 
-    # spoof.printf("")
-    # spoof.printf("Input the IP address of the server out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1)
-    # server = fpc.validate_ip(active_hosts, target["ip"])
+# spoof.printf("")
+# spoof.printf("Input the IP address of the server out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1)
+# server = fpc.validate_ip(active_hosts, target["ip"])
+
+
+# dns_hosts = {
+#     b"belot.bg.": "10.0.2.6",
+# }
+
+# target_ip = "10.0.2.4" M1
+# ip_to_spoof = "10.0.2.6" M2k

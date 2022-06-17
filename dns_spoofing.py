@@ -1,12 +1,13 @@
 from scapy.all import *
 import netifaces as ni
-import search_hosts as sh
-import arp_spoofing as arp
-import spoofing_tool as spoof
-import final_project_code as fpc
 import time
 import re
 
+import search_hosts as sh
+import arp_spoofing as arp
+import spoofing_tool as spoof
+
+## REGEX FOR CHECKING URL VALIDITY ##
 regex = re.compile(
         r'^(?:http|ftp)s?://' # http:// or https://
         r'(?:(?:[A-Z0-9](?:[A-Z0-9-]{0,61}[A-Z0-9])?\.)+(?:[A-Z]{2,6}\.?|[A-Z0-9-]{2,}\.?)|' #domain...
@@ -15,15 +16,9 @@ regex = re.compile(
         r'(?::\d+)?' # optional port
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
+## CONSTANTS ##
 REPOISON_TIME = int(10)
-END_POISON = int(2)
-
-# dns_hosts = {
-#     b"belot.bg.": "10.0.2.6",
-# }
-
-# target_ip = "10.0.2.4" M1
-# ip_to_spoof = "10.0.2.6" M2k
+END_POISON = int(200)
 
 def dns_spoofing(gratuitious, verbose):
     if verbose:     
@@ -35,7 +30,7 @@ def dns_spoofing(gratuitious, verbose):
     previous_tuples.append(["Chosen attack: DNS Spoofing.", 0])
     previous_tuples.append(["----------------------------"])
 
-    iface, previous_tuples = fpc.get_interface(previous_tuples)
+    iface, previous_tuples = spoof.get_interface(previous_tuples)
 
     previous_tuples.append(["Searching for active hosts in the subnet..."])
     previous_tuples.append([""])
@@ -49,7 +44,7 @@ def dns_spoofing(gratuitious, verbose):
     spoof.printf("Input the IP address of the target out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1)
     previous_tuples.append(["Input the IP address of the target out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1])
 
-    target = fpc.validate_ip(active_hosts, "", previous_tuples)
+    target = spoof.validate_ip(active_hosts, "", previous_tuples)
 
     # Get the IP addresses of the default gateways of the selected interface
     gateways = []
@@ -61,7 +56,7 @@ def dns_spoofing(gratuitious, verbose):
     previous_tuples = []
     to_print = "Chosen target IP address: " + target["ip"]
     previous_tuples.append([to_print, 0])
-    previous_tuples.append(["-" * len(to_print), -1])
+    previous_tuples.append(["-" * len(to_print)])
 
     dns_hosts = choose_websites(active_hosts, previous_tuples).copy()
     
@@ -110,9 +105,9 @@ def choose_websites(active_hosts, previous_tuples):
         spoof.clear()
         spoof.print_previous(previous_tuples, True)
 
-        url, continue1 = input_web(7, "URL: ", _iter, True, active_hosts, previous_tuples)
+        url, continue1 = input_web("URL: ", _iter, True, active_hosts, previous_tuples)
         if continue1:
-            ip, continue2  = input_web(7, " IP: ", _iter, False, active_hosts, previous_tuples)
+            ip, continue2  = input_web(" IP: ", _iter, False, active_hosts, previous_tuples)
         _iter += 1
         if continue1 and continue2:
             dns_hosts[url+"."] = ip
@@ -128,26 +123,26 @@ def choose_websites(active_hosts, previous_tuples):
 
     return dns_hosts
 
-def input_web(i, eend, _iter, isURL, active_hosts, previous_tuples):
-    res = spoof.inputf(i, eend, previous_tuples)
+def input_web(eend, _iter, isURL, active_hosts, previous_tuples):
+    res = spoof.inputf(previous_tuples, eend)
     if res in ["d", "done"]:
         if _iter < 1:
             spoof.printf("You chould choose at least one (URL, IP) pair!", 2)
-            return input_web(i, eend, _iter, isURL, active_hosts, previous_tuples)
+            return input_web(eend, _iter, isURL, active_hosts, previous_tuples)
         else:
             return res, False
 
     if isURL:
         if not is_URL_valid(res):
             spoof.printf("Invalid URL({})! Try again.".format(res), 2)
-            return input_web(i, eend, _iter, isURL, active_hosts, previous_tuples)
+            return input_web(eend, _iter, isURL, active_hosts, previous_tuples)
         else:
             return res, True
     else:
         ip, valid = is_IP_valid(active_hosts, res)
         if not valid:
             spoof.printf("Invalid IP({})! Try again.".format(ip), 2)
-            return input_web(i, eend, _iter, isURL, active_hosts, previous_tuples)
+            return input_web(eend, _iter, isURL, active_hosts, previous_tuples)
         else:
             return ip, True
 
