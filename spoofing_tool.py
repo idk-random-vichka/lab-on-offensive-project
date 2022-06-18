@@ -22,12 +22,6 @@ PRINT_INDEX = -1
 DEFAULT_IFACE = "lo"
 
 
-### VARIABLES ###
-
-verbose = False # mute outputs
-gratuitous = False # arp setting
-
-
 ### FUNCTIONS ###
 
 # Main function that is executed when the tool is started
@@ -37,9 +31,6 @@ def main():
 
     # clear the terminal and print the welcome message
     clear()
-
-    # play the starting sound
-    playsoundf("resources/windows_xp_startup.mp3", verbose)
 
     # choose the attack you wish to do
     choose_main_attack()
@@ -55,13 +46,13 @@ def choose_main_attack():
 
         if _input in ["arp", "a"]:
             # start arp attack
-            arp.arp_spoofing(gratuitous)
+            arp.arp_spoofing()
             # allow the user to choose a new attack after the current is finished
             choose_main_attack()
 
         elif _input in ["dns", "d"]:
             # start dns attack
-            dns.dns_spoofing(gratuitous)
+            dns.dns_spoofing()
             # allow the user to choose a new attack after the current is finished
             choose_main_attack()
 
@@ -77,15 +68,18 @@ def choose_main_attack():
 
 
 def choose_gratuitous(previous_tuples=[]):
-    printf("Do you want (s)ilent or (g)ratuitous attack?")
-    previous_tuples.append(["Do you want (s)ilent or (g)ratuitous attack?"])
+    _previous = previous_tuples[:]
+    _previous.append(["Do you want (s)ilent or (g)ratuitous attack?", 1])
+    print_previous(_previous)
     
     while True:
-        user_input = inputf(previous_tuples).lower() # get the user's input
+        user_input = inputf(_previous).lower() # get the user's input
         if user_input in ["s", "silent"]:
-                return False, previous_tuples
+                clear()
+                return False
         elif user_input in ["g", "gratuitous"]:
-                return True, previous_tuples
+                clear()
+                return True
         # otherwise make the user try again
         else:
             printf("Invalid Input. Try again!", 2)
@@ -249,11 +243,6 @@ def choice():
         else:
             printf("Invalid Input. Try again!", 2)
 
-# Function that plays a sound based on a relative address
-def playsoundf(str, verbose=False):
-    if not verbose:
-        playsound(str)
-
 # Function used to style a string for the header of each message printed by this tool
 #
 # @param i - the index used to style the header with further information
@@ -340,7 +329,6 @@ def handler(signum, frame):
 
 # Function that is called when the application is closed
 def quit_sequence():
-        playsoundf("resources/windows_xp_shutdown.mp3", verbose)
         printf("Closed: Lovec & Ribar.", 3)
 
 # Call main function on first pass through file

