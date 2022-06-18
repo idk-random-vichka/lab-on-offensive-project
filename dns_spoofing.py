@@ -31,8 +31,8 @@ REPOISON_TIME = int(20) # interval of repoisoning
 
 # Main function that runs the DNS attack
 def dns_spoofing(gratuitious, verbose):
-    if verbose:     
-        conf.verb = 0 # make scapy verbose (no output)
+    # if verbose:     
+    #     conf.verb = 0 # make scapy verbose (no output)
 
     # clear terminal and begin keeping track of previous displayed text for UI
     spoof.clear()

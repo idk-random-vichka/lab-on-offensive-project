@@ -1,0 +1,25 @@
+______                             
+___  / _________   _____________   
+__  /  _  __ \_ | / /  _ \  ___/   
+_  /___/ /_/ /_ |/ //  __/ /__     
+/_____/\____/_____/ \___/\___/     
+                  _________      
+    ______ _____________  /      
+    _  __ `/_  __ \  __  /       
+    / /_/ /_  / / / /_/ /        
+    \__,_/ /_/ /_/\__,_/         
+___________________                
+___  __ \__(_)__  /_______ ________
+__  /_/ /_  /__  __ \  __ `/_  ___/
+_  _, _/_  / _  /_/ / /_/ /_  /    
+/_/ |_| /_/  /_.___/\__,_/ /_/
+
+Welcome to Lovec and Ribar (L&R)
+Version 1.0
+Made by Velyan Kolev 
+    and Zdravko Petrov
+
+This is a spoofing tool made by two Bachelor Computer Science students as a project for the course 
+Lab on Offensive Computer Security at the Eindhoven University of Technology.
+
+The tool's name was inspired by a bulgarian song 

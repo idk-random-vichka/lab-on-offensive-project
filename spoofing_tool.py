@@ -12,6 +12,7 @@ import sys, os
 # import other files from project
 import arp_spoofing as arp
 import dns_spoofing as dns
+import lovec_ribar as l_r
 
 
 ### CONSTANTS ###
@@ -23,20 +24,23 @@ DEFAULT_IFACE = "lo"
 
 ### VARIABLES ###
 
-verbose = True # mute outputs
+verbose = False # mute outputs
 gratuitious = False # arp setting
 
 
 ### FUNCTIONS ###
 
 def main():
-    # should_ip_forward(True)
+    conf.verb = 0
+
     clear()
     printf("Welcome to our tool for spoofing!", 0)
     printf("")
     playsoundf("resources/windows_xp_startup.mp3", verbose)
+    lovec_and_ribar()
 
-    previous_tuples = [["Pick an attack: DNS(d) or ARP(a)", 1]]
+def lovec_and_ribar():
+    previous_tuples = [["Pick an attack: DNS(d), ARP(a) or L&R(lr)", 1]]
     print_previous(previous_tuples)
 
     while True:
@@ -46,6 +50,9 @@ def main():
             break
         elif _input in ["dns", "d"]:
             dns.dns_spoofing(gratuitious, verbose)
+            break
+        elif _input in ["l&r", "lr"]:
+            l_r.lovec_ribar()
             break
         else:
             printf("Invalid Input. Try again!", 2)
@@ -67,31 +74,32 @@ def get_interface(previous_tuples=[]):
         iface = DEFAULT_IFACE
 
     # choose interface
-    try:
-        previous_tuples.append(["Available interfaces:"])
+    previous_tuples.append(["Available interfaces:"])
 
-        for i in range(len(interfaces)):
-            previous_tuples.append(["\t"+str(i+1) + ": " + interfaces[i]])
+    for i in range(len(interfaces)):
+        previous_tuples.append(["\t"+str(i+1) + ": " + interfaces[i]])
 
-        previous_tuples.append([""])
-        previous_tuples.append(["Choose interface("+str(1)+"-"+str(len(interfaces))+") or default(d):", 1])
-        print_previous(previous_tuples)
+    previous_tuples.append([""])
+    previous_tuples.append(["Choose interface("+str(1)+"-"+str(len(interfaces))+") or default(d):", 1])
+    print_previous(previous_tuples)
 
-        user_input = inputf(previous_tuples)
-        if user_input.lower() not in ["default","d"]:
-            if user_input.strip().isdigit():
-                iface = interfaces[int(user_input) - 1]
-            elif user_input in interfaces:
-                iface = user_input
-            else:
-                raise # throw Exception
-        previous_tuples = []
+    _valid = True
+    previous_tuples = []
+    user_input = inputf(previous_tuples)
+    if user_input.lower() not in ["default","d"]:
+        if user_input.strip().isdigit():
+            iface = interfaces[int(user_input) - 1]
+        elif user_input in interfaces:
+            iface = user_input
+        else:
+            _valid = False
+            previous_tuples.append(["Invalid input. Choosing default interface ({}).".format(iface), 2])
+            previous_tuples.append(["---------------------------------------------" + "-" * len(iface)])
+    
+    if _valid:
         previous_tuples.append(["Chosen interface: " + iface, 0])
         previous_tuples.append(["------------------" + "-" * len(iface)])
-    except:
-        previous_tuples = []
-        previous_tuples.append(["Invalid input. Choosing default interface ({}).".format(iface), 2])
-        previous_tuples.append(["---------------------------------------------" + "-" * len(iface)])
+
 
     previous_tuples.append(["Searching for active hosts in the subnet..."])
     previous_tuples.append([""])
@@ -129,7 +137,7 @@ def printf(text, i=PRINT_INDEX, verbose=False):
 
 def inputf(previous_tuples=[], eend=""):
     _input = input(style_str(INPUT_INDEX) + eend)
-    if _input.lower() in ["q", "quit", "exit"]:
+    if _input.lower() in ["q", "quit"]:
         clear()
         printf("Are you sure you want to exit the application?", 1)
         if choice():
@@ -137,6 +145,12 @@ def inputf(previous_tuples=[], eend=""):
         else:
             print_previous(previous_tuples, True)
             _input = inputf(previous_tuples, eend)
+    elif _input.lower() in ["r", "reset"]:
+        clear()
+        lovec_and_ribar()
+    elif _input.lower() in ["h", "help"]:
+        clear()
+        lovec_and_ribar()
 
     return _input
 
@@ -219,7 +233,7 @@ def should_ip_forward(should_forward):
         subprocess.call(["sysctl", "-w", "net.ipv4.ip_forward="+forw], stdout=open(os.devnull, "wb"))
 
 def handler(signum, frame):
-    sys.exit()
+    lovec_and_ribar()
 
 def quit_sequence():
         printf("Closed: Lovec & Ribar.", 3)
@@ -236,9 +250,9 @@ if __name__=="__main__":
     except SystemExit:
         print(" (SystemExit)")
         quit_sequence()
-    # except:
-    #     printf("Unexpected error!", 2)
-    #     printf(sys.exc_info()[1], 2)
-    #     printf("")
-    #     quit_sequence()
+    except:
+        printf("Unexpected error!", 2)
+        printf(sys.exc_info()[1], 2)
+        printf("")
+        quit_sequence()
     # main()
