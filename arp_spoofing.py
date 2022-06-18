@@ -27,11 +27,7 @@ ONE_WAY_TOKEN = "__ONE_WAY_TOKEN__"
 ### FUNCTIONS ###
 
 # Main function that runs the ARP attack
-def arp_spoofing(gratuitious, verbose):
-    # mute scapy output
-    # if verbose:
-    #     conf.verb = 0
-
+def arp_spoofing(gratuitious):
     # clear terminal and begin keeping track of previous displayed text for UI
     spoof.clear()
     previous_tuples = []
