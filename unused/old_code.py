@@ -135,3 +135,26 @@ MIDDLE_INTERVAL = 20 # ettercap sends packets every 10 seconds
 END_INTERVAL = 1 # ettercap sends packets every second
 
 ONE_WAY_TOKEN = "__ONE_WAY_TOKEN__"
+
+                # sendpfast(pkt, iface=iface)
+
+                # try:
+                #     # new_pkt = srp1(pkt, verbose=0, iface=iface, timeout=2)[0]
+                #     # # if pkt.haslayer(DNS):
+                #     # # else:
+                #     # #     new_pkt = sr1(pkt, iface=iface)[0]
+
+                #     # new_pkt[Ether].dst = target["mac"]
+
+                #     # if new_pkt.haslayer(IP):
+                #     #     del new_pkt[IP].len
+                #     #     del new_pkt[IP].chksum
+                    
+                #     # if new_pkt.haslayer(UDP):
+                #     #     del new_pkt[UDP].len
+                #     #     del new_pkt[UDP].chksum
+
+                #     #sendp(pkt, count=1, iface=iface)
+                #     s2.sendp(pkt, count=1)
+                # except:
+                #     pass

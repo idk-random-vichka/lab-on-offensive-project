@@ -15,6 +15,7 @@ import dns_spoofing as dns
 
 
 ### CONSTANTS ###
+
 INPUT_INDEX = 7
 PRINT_INDEX = -1
 DEFAULT_IFACE = "lo"
