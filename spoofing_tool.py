@@ -6,6 +6,7 @@ from os import system, name
 import signal
 import sys, os
 
+# import other files from project
 import arp_spoofing as arp
 import dns_spoofing as dns
 
@@ -205,7 +206,7 @@ def should_ip_forward(should_forward):
             forw = "1"
         else:
             forw = "0"
-        subprocess.call(["sysctl", "-w", "net.ipv4.ip_forward="+forw])#, stdout=open(os.devnull, "wb"))
+        subprocess.call(["sysctl", "-w", "net.ipv4.ip_forward="+forw], stdout=open(os.devnull, "wb"))
 
 def handler(signum, frame):
     sys.exit()

