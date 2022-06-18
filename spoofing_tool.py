@@ -1,7 +1,10 @@
+### IMPORTS ###
+
 from playsound import playsound # pip install
 from scapy.all import *
 import netifaces as ni # pip install
 
+# standard libraries
 from os import system, name
 import signal
 import sys, os
@@ -10,14 +13,20 @@ import sys, os
 import arp_spoofing as arp
 import dns_spoofing as dns
 
-## CONSTANTS ##
+
+### CONSTANTS ###
 INPUT_INDEX = 7
 PRINT_INDEX = -1
 DEFAULT_IFACE = "lo"
 
-## VARIABLES ##
+
+### VARIABLES ###
+
 verbose = True # mute outputs
 gratuitious = False # arp setting
+
+
+### FUNCTIONS ###
 
 def main():
     # should_ip_forward(True)

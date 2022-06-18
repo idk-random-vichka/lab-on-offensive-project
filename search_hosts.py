@@ -1,8 +1,13 @@
+### IMPORTS ###
+
 import netifaces as ni
 from scapy.all import *
 
 # Import other files from project
 import spoofing_tool as spoof
+
+
+### FUNCTIONS ###
 
 # Function that searches for all available hosts on the provided {@iface} 
 # @returns array of active hosts as dictionary with 'ip', 'mac' and 'cmmnt' (comment)

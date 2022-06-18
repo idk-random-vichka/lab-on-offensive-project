@@ -123,3 +123,15 @@
 
         #     new_pkt = sr1(pkt, iface=iface)
         #     print(new_pkt.show())
+
+
+## CONSTANTS ##
+START_COUNT = 5 # ettercap starts poisoning with 5 packets
+MIDDLE_COUNT = 200 #sys.maxint # ettercap keeps poisoning for 200 packets
+END_COUNT = 3 # ettercap ends poisoning with 3 packets
+
+START_INTERVAL = 1 # ettercap sends packets every second
+MIDDLE_INTERVAL = 20 # ettercap sends packets every 10 seconds
+END_INTERVAL = 1 # ettercap sends packets every second
+
+ONE_WAY_TOKEN = "__ONE_WAY_TOKEN__"

@@ -1,3 +1,5 @@
+### IMPORTS ###
+
 from scapy.all import *
 import netifaces as ni
 import time
@@ -8,6 +10,7 @@ import search_hosts as sh
 import arp_spoofing as arp
 import spoofing_tool as spoof
 
+
 ## REGEX FOR CHECKING URL VALIDITY ##
 regex = re.compile(
         r'^(?:http|ftp)s?://' # http:// or https://
@@ -17,9 +20,14 @@ regex = re.compile(
         r'(?::\d+)?' # optional port
         r'(?:/?|[/?]\S+)$', re.IGNORECASE)
 
-## CONSTANTS ##
+
+### CONSTANTS ###
+
 REPOISON_TIME = int(20)
 END_POISON = int(200)
+
+
+### FUNCTIONS ###
 
 def dns_spoofing(gratuitious, verbose):
     if verbose:     
