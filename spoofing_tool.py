@@ -25,7 +25,7 @@ DEFAULT_IFACE = "lo"
 ### VARIABLES ###
 
 verbose = False # mute outputs
-gratuitious = False # arp setting
+gratuitous = False # arp setting
 
 
 ### FUNCTIONS ###
@@ -55,13 +55,13 @@ def choose_main_attack():
 
         if _input in ["arp", "a"]:
             # start arp attack
-            arp.arp_spoofing(gratuitious)
+            arp.arp_spoofing(gratuitous)
             # allow the user to choose a new attack after the current is finished
             choose_main_attack()
 
         elif _input in ["dns", "d"]:
             # start dns attack
-            dns.dns_spoofing(gratuitious)
+            dns.dns_spoofing(gratuitous)
             # allow the user to choose a new attack after the current is finished
             choose_main_attack()
 
@@ -73,6 +73,21 @@ def choose_main_attack():
 
         else:
             # when the user's input is invalid
+            printf("Invalid Input. Try again!", 2)
+
+
+def choose_gratuitous(previous_tuples=[]):
+    printf("Do you want (s)ilent or (g)ratuitous attack?")
+    previous_tuples.append(["Do you want (s)ilent or (g)ratuitous attack?"])
+    
+    while True:
+        user_input = inputf(previous_tuples).lower() # get the user's input
+        if user_input in ["s", "silent"]:
+                return False, previous_tuples
+        elif user_input in ["g", "gratuitous"]:
+                return True, previous_tuples
+        # otherwise make the user try again
+        else:
             printf("Invalid Input. Try again!", 2)
 
 # Function that allows the user to pick an interface on which the current attack will be executed
@@ -170,6 +185,7 @@ def validate_ip(active_hosts, other_ips, previous_tuples=[]):
 def printf(text, i=PRINT_INDEX, verbose=False):
     if not verbose:
         print(style_str(i) + str(text))
+
 # Function used to get the user's input and allow for functionality such as closnig the program from anywhere
 # 
 # @param previous_tuples - list of text that should be displayed if the screen is cleared 

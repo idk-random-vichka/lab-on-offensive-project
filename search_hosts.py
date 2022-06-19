@@ -69,7 +69,7 @@ def print_active_hosts(active_hosts, num_scanned, net_addr, previous_tuples=[], 
 
     return previous_tuples
 
-# Function fro converting an IP address to a Binary string
+# Function for converting an IP address to a Binary string
 def ip2bin(ip):
     octets = map(int, ip.split('/')[0].split('.')) # '1.2.3.4'=>[1, 2, 3, 4]
     binary = '{0:08b}{1:08b}{2:08b}{3:08b}'.format(*octets)
