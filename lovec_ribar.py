@@ -29,7 +29,7 @@ def lovec_ribar():
     print('https://www.youtube.com/watch?v=VfzILqHfg6U ;)')
 
     # play the sound
-    # playsound('resources/lovec_ribar.mp3')
+    playsound('resources/lovec_ribar.mp3')
 
     # when the sound is over print the image and yt link again
     spoof.clear()
