@@ -86,7 +86,9 @@ def help_doc():
     choose_main_attack()
 
 
-# Fucntion that allows the user if the current attack is silent or gratuitous
+# Function that allows the user if the current attack is silent or gratuitous
+#
+# @return True if gratuitous and False if silent mode chosen
 def choose_gratuitous(previous_tuples=[]):
     _previous = previous_tuples[:]
     _previous.append(["Do you want (s)ilent or (g)ratuitous attack?", 1])
