@@ -85,7 +85,6 @@ def help_doc():
     clear()
     choose_main_attack()
 
-
 # Function that allows the user if the current attack is silent or gratuitous
 #
 # @return True if gratuitous and False if silent mode chosen
