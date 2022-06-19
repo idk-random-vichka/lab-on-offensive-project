@@ -357,6 +357,7 @@ def should_ip_forward(should_forward):
 # Function to handle the occurance of specific signal
 def handler(signum, frame):
     print("")
+    clear()
     choose_main_attack()
 
 # Function that is called when the application is closed

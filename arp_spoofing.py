@@ -126,7 +126,7 @@ def two_way_arp_procedure(targets, macAtk, ipAtk, iface, gratuitous):
 
     # send reply packets to keep repoisong
     spoof.printf("Poisoning initiated.", 4)
-    poison_m_times_every_n_secs(MIDDLE_COUNT, MIDDLE_INTERVAL, time.time(), True, targets, macAtk, ipAtk, iface, 2, gratuitous)
+    poison_m_times_every_n_secs(MIDDLE_COUNT, MIDDLE_INTERVAL, time.time(), True, targets, macAtk, ipAtk, iface, 2, gratuitous, True)
 
     # at the end restore the arp tables of all targets to normal to remain undetected 
     spoof.printf("Stopping poisoning!!! (Do not kill the program)", 4)
@@ -153,10 +153,12 @@ def one_way_arp_end(macT1, ipT1, macT2, ipT2, macAtk, ipAtk, iface):
 #  
 # @param should_poison - boolean to determine if it is poisoning or unpoisoning (True = poison, False = unpoison)
 # @param pkt_type - the type of packets to be sent (1 = request, 2 = reply)
-def poison_m_times_every_n_secs(m, n, last_sent_time, should_poison, targets, macAtk, ipAtk, iface, pkt_type, gratuitous=False):
+def poison_m_times_every_n_secs(m, n, last_sent_time, should_poison, targets, macAtk, ipAtk, iface, pkt_type, gratuitous=False, print_mssg=False):
     while m > 0:
         if time.time() - last_sent_time > n: # if n seconds have passed => should poison/unpoison again
             if should_poison:
+                if print_mssg:
+                    spoof.printf("Repoisoning.", 4)
                 arp_poison(targets, macAtk, ipAtk, iface, pkt_type, gratuitous)
             else:
                 arp_unpoison(targets, macAtk, ipAtk, iface, pkt_type)     
