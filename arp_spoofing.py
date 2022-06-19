@@ -245,6 +245,5 @@ def build_packet(macAttacker, ipToSpoof, macVictim, ipVictim, pkt_type, gratuito
         packet[ARP].hwdst = macVictim
         packet[ARP].pdst  = ipVictim
         packet[ARP].op = pkt_type # 1 = request, 2 = reply
-    print(packet.show())
 
     return packet

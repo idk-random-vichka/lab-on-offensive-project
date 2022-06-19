@@ -29,10 +29,16 @@ def main():
     # mute the output of scapy
     conf.verb = 0
 
-    # clear the terminal and print the welcome message
+    # clear the terminal and print the intoduction message
     clear()
+    intro_doc = open('resources/intro_doc.txt', 'r')
+    intro_doc_contents = intro_doc.read()
+    print(intro_doc_contents)
+    _ = input("Press ENTER to begin using the tool... ")
+    print("")
 
     # choose the attack you wish to do
+    clear()
     choose_main_attack()
 
 # Function that picks an attack based on user input
@@ -66,7 +72,21 @@ def choose_main_attack():
             # when the user's input is invalid
             printf("Invalid Input. Try again!", 2)
 
+# Function to display the help menu
+def help_doc():
+    clear()
+    help_doc = open('resources/help_doc.txt', 'r')
+    help_doc_contents = help_doc.read()
+    print(help_doc_contents)
+    _ = input("Press ENTER to begin using the tool... ")
+    print("")
 
+    # choose the attack you wish to do
+    clear()
+    choose_main_attack()
+
+
+# Fucntion that allows the user if the current attack is silent or gratuitous
 def choose_gratuitous(previous_tuples=[]):
     _previous = previous_tuples[:]
     _previous.append(["Do you want (s)ilent or (g)ratuitous attack?", 1])
@@ -210,9 +230,9 @@ def inputf(previous_tuples=[], eend=""):
         clear()
         printf("Are you sure you want to stop the current attack and return to the initial screen?", 1)
         if choice():
-            # if user chose to reset => return to choosing an attack
+            # if user chose to reset => return to initial screen
             clear()
-            choose_main_attack()
+            main()
         else:
             # otherwise the user backed out so the previous_tuples should be dispalyed
             print_previous(previous_tuples, True)
@@ -220,7 +240,18 @@ def inputf(previous_tuples=[], eend=""):
             _input = inputf(previous_tuples, eend)
     # if the user chose to display the help menu
     elif _input.lower() in ["h", "help"]:
-        pass
+        # clear the screen and provide with a prompt for confirmation
+        clear()
+        printf("Are you sure you want to stop the current attack and go to the help screen?", 1)
+        if choice():
+            # if user chose to go to help screen => go to help menu
+            clear()
+            help_doc()
+        else:
+            # otherwise the user backed out so the previous_tuples should be dispalyed
+            print_previous(previous_tuples, True)
+            # get the user's input again
+            _input = inputf(previous_tuples, eend)
 
     # return the input of the user
     return _input
@@ -325,6 +356,7 @@ def should_ip_forward(should_forward):
 
 # Function to handle the occurance of specific signal
 def handler(signum, frame):
+    print("")
     choose_main_attack()
 
 # Function that is called when the application is closed

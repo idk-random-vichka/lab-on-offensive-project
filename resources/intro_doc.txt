@@ -22,4 +22,9 @@ Made by Velyan Kolev
 This is a spoofing tool made by two Bachelor Computer Science students as a project for the course 
 Lab on Offensive Computer Security at the Eindhoven University of Technology.
 
-The tool's name was inspired by a bulgarian song 
+The following commands can always be used:
+    (q)uit  - exits the system
+    (r)eset - go back to this screen
+    (h)elp  - brings out a help menu
+    CTRL+C  - stops the tool (does not work while running an attack)
+    CTRL+Z  - stops the current attack (should only be used while running an attack)
